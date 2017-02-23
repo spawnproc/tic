@@ -6,7 +6,7 @@ Launch
 
 
 ```
- $ git clone git://github.com/spawnproc/trade && cd clone
+ $ git clone git://github.com/spawnproc/trade && cd trade
  $ ./mad dep com pla rep
 ```
 
