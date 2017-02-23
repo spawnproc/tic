@@ -1,0 +1,9 @@
+{application, trade, [
+    {description,  "Erlang Trading Platform"},
+    {vsn,          "0.1"},
+    {applications, [kernel, stdlib, crypto, public_key, asn1, ssl]},
+    {modules, []},
+    {registered,   []},
+    {mod, { trade, []}},
+    {env, []}
+]}.
