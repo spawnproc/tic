@@ -10,7 +10,8 @@ Launch
 ------
 
 ```
-$ git clone git://github.com/spawnproc/trade && cd trade
+$ brew install erlang
+$ git clone git://github.com/spawnproc/ticker && cd ticker
 $ ./mad dep com pla rep
 ```
 
