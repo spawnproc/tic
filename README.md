@@ -12,7 +12,7 @@ Launch
 ```
 $ brew install erlang
 $ git clone git://github.com/spawnproc/ticker && cd ticker
-$ ./mad dep com pla rep
+$ ./mad dep com pla && ./mad rep
 ```
 
 Credits
