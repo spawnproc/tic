@@ -3,21 +3,11 @@
 -behaviour(websocket_client_handler).
 -include("gdax.hrl").
 -include("core.hrl").
--export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3]).
+-export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,order/7,post/2]).
 -compile({parse_transform, rest}).
--compile(export_all).
--export([post/2]).
 -rest_record(gdax).
 
-route(#gdax{size=S, price=P, side=Side, reason=A, product_id=Sy}=GDAX,Debug) ->
-     {{Y,M,D},_} = calendar:universal_time(),
-     FileName = lists:concat(["priv/",?MODULE,"/",Y,"-",M,"-",D,"-",Sy]),
-     Order = list_to_binary(sym:f(order(Sy,A,Side,f(S),S,P,Debug))),
-     file:write_file(FileName, Order, [raw, binary, append, read, write]),
-     [].
-
-f([]) -> 0;
-f(X) -> list_to_float(X).
+route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sy},D) -> trade:order_trace(?MODULE,A,Sy,S,P,Side,D).
 
 order(_,"canceled",_,_,_,_,M)                             -> [0,"-0"];
 order(_,_,_,_,[],P,M)                                     -> [0,P];
