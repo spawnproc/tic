@@ -1,5 +1,5 @@
-Trading Platform
-================
+Ticker Plant
+============
 
 Origins
 -------
