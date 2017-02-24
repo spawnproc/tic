@@ -17,7 +17,7 @@ websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 
 state(State) -> State + 1.
-print(Msg)   -> io:format("~p~n", [post(?JSON:decode(Msg),#ctx{})]).
+print(Msg)   -> kvs:info(?MODULE,"~p~n", [post(?JSON:decode(Msg),#ctx{})]).
 subscribe()  -> websocket_client:cast(self(), {text, <<"{\"type\":\"subscribe\",\"product_ids\": [\"BTC-USD\"]}">>}).
 
 instance() -> #gdax{}.

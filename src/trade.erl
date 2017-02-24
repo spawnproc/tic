@@ -2,8 +2,9 @@
 -description('Erlang Trading Platform').
 -behaviour(supervisor).
 -behaviour(application).
--export([start/2, stop/1, init/1]).
+-export([start/2, stop/1, init/1, log_modules/0]).
 
+log_modules() -> [bitmex,gdax].
 start(_,_) -> lists:foldl(fun({B,A},_) -> websocket_client:start_link(A, B, []) end, ignore, venues()).
 stop(_)    -> ok.
 init([])   -> { ok, { { one_for_one, 5, 10 }, [] } }.
