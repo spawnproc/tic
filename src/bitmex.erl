@@ -1,6 +1,13 @@
 -module(bitmex).
+-behaviour(rest).
 -behaviour(websocket_client_handler).
+-include("bitmex.hrl").
+-include("core.hrl").
 -export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3]).
+-compile({parse_transform, rest}).
+-compile(export_all).
+-export([post/2]).
+-rest_record(bitmex).
 
 init([], _)                             -> {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
@@ -10,4 +17,7 @@ websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 
 state(State) -> State + 1.
-print(Msg)   -> io:format("Received msg ~p~n", [Msg]).
+print(Msg)   -> io:format("~p~n", [post(?JSON:decode(Msg),#ctx{})]).
+
+instance() -> #bitmex{}.
+post({Data},#ctx{user=User}) -> {ok, from_json(Data, instance())}.
