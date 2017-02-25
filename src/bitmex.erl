@@ -20,8 +20,8 @@ order(Sym,A,Side,_,S,P,M)           -> [Sym,A,Side,S,P]. % default all
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).
 instance()        -> #bitmex{}.
-post({Data}, Ctx) -> Bitmex=from_json(Data, instance()), #bitmex{data=D}=Bitmex,
-                     Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- D]}.
+post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
+                     Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- Bitmex#bitmex.data]}.
 
 init([], _)                               -> {ok, 1, 100}.
 websocket_info(start, _, State)           -> {reply, <<>>, State}.

@@ -2,10 +2,10 @@
 -description('Erlang Trading Platform').
 -behaviour(supervisor).
 -behaviour(application).
--export([start/2, stop/1, init/1, log_modules/0, main/1, order_trace/7]).
+-export([start/2, stop/1, init/1, log_modules/0, order_trace/7]).
 
 venues() -> [{gdax,   "wss://ws-feed.gdax.com"},
-             {bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,orderBookL2:XBTUSD"}].
+             {bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,instruments"}].
 
 order_trace(Venue,A,Sy,S,P,Side,Debug) ->
      {{Y,M,D},_}=calendar:universal_time(),
@@ -15,11 +15,10 @@ order_trace(Venue,A,Sy,S,P,Side,Debug) ->
      file:write_file(FileName, Order, [raw, binary, append, read, write]).
 
 stop(_)       -> ok.
-main(A)       -> mad:main(A).
 init([])      -> { ok, { { one_for_one, 5, 10 }, [] } }.
 log_modules() -> [ bitmex, gdax ].
 dirs()        -> file:make_dir("priv"), [ file:make_dir(lists:concat(["priv/",X])) || X <- log_modules() ].
-start(_,_)    -> dirs(), lists:foldl(fun({B,A},_) ->
+start(_,_)    -> dirs(), kvs:join(), book:media(), lists:foldl(fun({B,A},_) ->
                             websocket_client:start_link(A, B, []) end, ok, venues()).
 
 s([]) -> 0;
