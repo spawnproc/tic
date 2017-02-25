@@ -2,18 +2,21 @@
 -description('Erlang Trading Platform').
 -behaviour(supervisor).
 -behaviour(application).
--export([start/2, stop/1, init/1, log_modules/0, order_trace/7]).
+-compile(export_all).
+-export([start/2, stop/1, init/1]).
 
 venues() -> [{gdax,   "wss://ws-feed.gdax.com"},
              {bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,instruments"}].
 
-order_trace(Venue,A,Sy,S,P,Side,Debug) ->
+order_trace(Venue,T,A,Sym,S,P,Side,Debug) ->
      {{Y,M,D},_}=calendar:universal_time(),
      file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
-     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sy]),
-     Order = list_to_binary(sym:f(Venue:order(Sy,A,Side,s(S),S,p(P),Debug))),
+     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
+     kvs:info(Venue,"~p~n",[[Sym,T,A,Side,s(S),S,normal(p(P))]]),
+     Order = list_to_binary(sym:f(Venue:order(Sym,T,A,Side,s(S),S,normal(p(P)),Debug))),
      file:write_file(FileName, Order, [raw, binary, append, read, write]).
 
+precision()   -> 8.
 stop(_)       -> ok.
 init([])      -> { ok, { { one_for_one, 5, 10 }, [] } }.
 log_modules() -> [ bitmex, gdax ].
@@ -21,8 +24,15 @@ dirs()        -> file:make_dir("priv"), [ file:make_dir(lists:concat(["priv/",X]
 start(_,_)    -> dirs(), kvs:join(), book:media(), lists:foldl(fun({B,A},_) ->
                             websocket_client:start_link(A, B, []) end, ok, venues()).
 
-s([]) -> 0;
-s(X)  -> X.
+s([])                   -> 0;
+s(X) when is_list(X)    -> list_to_float(X);
+s(X)                    -> X.
 p(X) when is_integer(X) -> integer_to_list(X);
 p(X) when is_float(X)   -> float_to_list(X,[{decimals,9},compact]);
-p(X) -> X.
+p(X)                    -> X.
+
+c([])         -> [];
+c([X])        -> n([X,[]]);
+c(X)          -> n(X).
+n([Z,Y])      -> lists:concat([Z,Y,lists:duplicate(precision() - length(Y),"0")]).
+normal(Price) -> lists:flatten(c(string:tokens(Price,"."))).
