@@ -1,5 +1,5 @@
-Ticker Plant
-============
+Crypto Liquidity Integrator
+===========================
 
 Origins
 -------
