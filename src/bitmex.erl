@@ -18,7 +18,7 @@ order(_,_,_,_,S,P,M)                -> [0,lists:concat(["-",S]),P];
 order(Sym,A,Side,_,S,P,M)           -> [Sym,A,Side,S,P]. % default all
 
 state(State)      -> State + 1.
-print(Msg)        -> route(post(?JSON:decode(Msg),#ctx{}),Msg).
+print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).
 instance()        -> #bitmex{}.
 post({Data}, Ctx) -> Bitmex=from_json(Data, instance()), #bitmex{data=D}=Bitmex,
                      Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- D]}.
