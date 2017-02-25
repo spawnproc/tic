@@ -27,7 +27,7 @@ post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
 
 init([], _)                               -> {ok, 1, 100}.
 websocket_info(start, _, State)           -> {reply, <<>>, State}.
-websocket_terminate(_, _, _)              -> ok.
+websocket_terminate(_, _, _)              -> kvs:info(?MODULE,"terminated",[]), ok.
 websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}.

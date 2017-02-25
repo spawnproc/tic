@@ -17,12 +17,12 @@ order_trace(Venue,[A,Sym,S,P,Side,Debug]) ->
      file:write_file(FileName, Order, [raw, binary, append, read, write]).
 
 precision()   -> 8.
-stop(_)       -> ok.
-init([])      -> { ok, { { one_for_one, 5, 10 }, [] } }.
 log_modules() -> [ bitmex, gdax ].
+init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues() ] } }.
+ws(Venue,URL) -> {Venue,{websocket_client,start_link,[URL,Venue,[]]},permanent,1000,worker,[websocket_client]}.
 dirs()        -> file:make_dir("priv"), [ file:make_dir(lists:concat(["priv/",X])) || X <- log_modules() ].
-start(_,_)    -> dirs(), kvs:join(), book:media(), lists:foldl(fun({B,A},_) ->
-                            websocket_client:start_link(A, B, []) end, ok, venues()).
+start(_,_)    -> dirs(), kvs:join(), book:media(), supervisor:start_link({local,ticker},?MODULE,[]).
+stop(_)       -> ok.
 
 s([])                   -> 0;
 s(X) when is_list(X)    -> list_to_float(X);
