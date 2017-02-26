@@ -19,7 +19,7 @@ remove(#tick{price=P}) ->
         [#tick{uid=UID,size=XS}=X]  -> kvs:put(X#tick{size=0}), UID end.
 
 print() ->
-    F      = fun(X, Y) -> X#tick.price < Y#tick.price end,
+    F      = fun(X, Y) -> trade:nn(X#tick.price) < trade:nn(Y#tick.price) end,
     Sorted = lists:sort(F, kvs:all(tick)),
 
     {PI,PW,SW} = lists:foldr(fun(#tick{size=S,price=P,uid=UID},{I,X,Y}) ->

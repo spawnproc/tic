@@ -15,8 +15,8 @@ action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P}=SymRec,Debug) when Sym == "
 
 action(_,_,_,_) -> ok.
 
-order(_,"delete",_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
 order(A,X,_,_,[],M)       -> [0,X];
+order(_,"delete",_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
 order(_,_,"Buy",S,P,M)    -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
 order(_,_,"Sell",S,P,M)   -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
