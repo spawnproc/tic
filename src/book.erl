@@ -15,7 +15,7 @@ add(#tick{price=P,size=S}=T) ->
 
 remove(#tick{price=P,id=A}) ->
    case kvs:index(tick,price,P) of
-        [] -> io:format("~p~n",[{A,P}]), 0;
+        [] -> 0;
         [#tick{uid=UID,size=XS}=X]  -> kvs:put(X#tick{size=0}), UID end.
 
 print() ->
