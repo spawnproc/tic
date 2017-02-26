@@ -7,11 +7,11 @@
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
-route(#bitmex{table=T,action=Ac,data=D},M) ->
-    lists:foldl(fun (X,A) -> action(T,Ac,X,M) end, [], [X||X<-D]).
+route(#bitmex{table=T,action=Ac,data=D}=B,M) ->
+    lists:foldl(fun (X,A) -> action(B,Ac,X,M) end, [], [X||X<-D]).
 
-action(T,A,#sym{symbol=Sy,side=Side,size=S,price=P},Debug) ->
-    trade:order_trace(?MODULE,[A,Sy,S,P,Side,Debug]).
+action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P}=SymRec,Debug) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,SymRec]).
 
 order(_,"delete",_,_,S,_,M)         -> [0,"-0"];
 order(_,_,"Buy",_,S,[],M) when S >0 -> [0,lists:concat(["+",S])];
