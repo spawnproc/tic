@@ -21,13 +21,13 @@ remove(#tick{price=P}) ->
 print() ->
     F      = fun(X, Y) -> X#tick.price < Y#tick.price end,
     Sorted = lists:sort(F, kvs:all(tick)),
-    Total  = lists:foldr(fun(#tick{size=0},Acc) -> Acc;
-                            (#tick{size=S,price=P,uid=I}=T,Acc) ->
+    {Depth,Total}  = lists:foldr(fun(#tick{size=0},{D,T}) -> {D,T};
+                                    (#tick{size=S,price=P,uid=I},{D,Acc}) ->
 
     io:format("[~s ~s ~s]~n",
             [ string:right(integer_to_list(I),4,$ ),
               string:right(P,16,$ ),
-              trade:p(S) ]), Acc + S end, 0, Sorted),
+              trade:p(S) ]), {D+1,Acc+S} end, {0,0}, Sorted),
 
-    io:format("Depth: ~p~n",[length(Sorted)]),
+    io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[trade:p(Total)]).
