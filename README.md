@@ -6,6 +6,17 @@ Origins
 
 https://t.me/alkotrading
 
+Features
+--------
+
+* L3 Order Book persistence
+* Realtime WebSocket Connections
+* Stream Recording and Replaying
+* BitMEX, OKCoin, GDAX and other venues
+* Reconnecting on stream failures
+* Fast ETS storage as matching engine
+* 150 LOC
+
 Launch
 ------
 
@@ -13,6 +24,23 @@ Launch
 $ brew install erlang
 $ git clone git://github.com/spawnproc/ticker && cd ticker
 $ ./mad dep com pla && ./mad rep
+```
+
+Text Log
+--------
+
+```
+$ tail priv/gdax/2017-2-26/BTC-USD
+2017-02-26T07:28:13.325000Z:[27 +111000000 114897000000]
+2017-02-26T07:28:13.332000Z:[114 +102000000 114874000000]
+2017-02-26T07:28:13.339000Z:[27 +109000000 114897000000]
+2017-02-26T07:28:13.348000Z:[29 +115000000 114911000000]
+2017-02-26T07:28:13.356000Z:[30 +109000000 114901000000]
+2017-02-26T07:28:13.363000Z:[31 +109000000 114903000000]
+2017-02-26T07:28:13.372000Z:[114 +098000000 114874000000]
+2017-02-26T07:28:13.420000Z:[14 -010610000 115845000000]
+2017-02-26T07:28:13.546000Z:[14 -0]
+2017-02-26T07:28:13.561000Z:[37 -010610000 115844000000]
 ```
 
 Commands

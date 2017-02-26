@@ -18,7 +18,7 @@ route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,t
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T},D) ->
     trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]).
 
-order(A,X,_,_,[],M)         -> [];
+order(A,X,_,_,[],M)         -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
 order(A,"canceled",_,_,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
 order(_,_,"buy",S,P,M)      -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
 order(_,_,"sell",S,P,M)     -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].

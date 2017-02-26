@@ -12,7 +12,7 @@ order_trace(Venue,[A,Sym,S,P,Side,Debug,Timestamp]) ->
     {{Y,M,D},_}=calendar:universal_time(),
     file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
-    %kvs:info(gdax,"~p:",[[Sym,A,Side,S,normal(p(P)),Debug,Timestamp]]),
+    %io:format("~p:\r",[[Sym,A,Side,S,normal(p(P)),Debug]]),
     Order = list_to_binary(sym:f(Timestamp,Venue:order(Sym,A,Side,normal(p(S)),normal(p(P)),Debug))),
     %io:format("~p~n\r",[Order]),
     file:write_file(FileName, Order, [raw, binary, append, read, write]).
