@@ -21,13 +21,24 @@ remove(#tick{price=P}) ->
 print() ->
     F      = fun(X, Y) -> X#tick.price < Y#tick.price end,
     Sorted = lists:sort(F, kvs:all(tick)),
-    {Depth,Total}  = lists:foldr(fun(#tick{size=0},{D,T}) -> {D,T};
+
+    {PW,SW} = lists:foldr(fun(#tick{size=S,price=P,uid=I},{X,Y}) ->
+            { erlang:max(X,length(P)),
+              erlang:max(Y,length(integer_to_list(S))) } end, {0,0}, Sorted),
+
+    io:format("~s ~s ~s~n", [string:right("No",4,$ ),
+                             string:right("Price * 10e8",PW,$ ),
+                             string:left("Size * 10e8",SW,$ )]),
+
+    io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
+
+    {Depth,Total}  = lists:foldr(fun(#tick{size=0},A) -> A;
                                     (#tick{size=S,price=P,uid=I},{D,Acc}) ->
 
-    io:format("[~s ~s ~s]~n",
+    io:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),4,$ ),
-              string:right(P,16,$ ),
-              trade:p(S) ]), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:right(P,PW,$ ),
+              string:right(trade:p(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[trade:p(Total)]).

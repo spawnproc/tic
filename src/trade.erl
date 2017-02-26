@@ -12,9 +12,9 @@ order_trace(Venue,[A,Sym,S,P,Side,Debug]) ->
     {{Y,M,D},_}=calendar:universal_time(),
     file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
-%    io:format("~p:",[[Sym,A,Side,s(S),S,normal(p(P))]]),
-    Order = list_to_binary(sym:f(Venue:order(Sym,A,Side,s(S),S,normal(p(P)),Debug))),
-%    io:format("~p~n\r",[Order]),
+    %io:format("~p:",[[Sym,A,Side,s(S),S,normal(p(P))]]),
+    Order = list_to_binary(sym:f(Venue:order(Sym,A,Side,S,normal(p(P)),Debug))),
+    %io:format("~p~n\r",[Order]),
     file:write_file(FileName, Order, [raw, binary, append, read, write]).
 
 precision()   -> 8.
@@ -25,15 +25,14 @@ dirs()        -> file:make_dir("priv"), [ file:make_dir(lists:concat(["priv/",X]
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 
-s([])                   -> 0;
-s(X) when is_list(X)    -> list_to_float(X);
-s(X)                    -> X.
 p(X) when is_integer(X) -> integer_to_list(X);
 p(X) when is_float(X)   -> float_to_list(X,[{decimals,9},compact]);
 p(X)                    -> X.
 
-c([])         -> [];
-c([X])        -> n([X,[]]);
-c(X)          -> n(X).
 n([Z,Y])      -> lists:concat([Z,Y,lists:duplicate(precision() - length(Y),"0")]).
 normal(Price) -> lists:flatten(c(string:tokens(Price,"."))).
+
+nn(X)  -> list_to_integer(normal(X)).
+c([])  -> [];
+c([X]) -> n([X,[]]);
+c(X)   -> n(X).

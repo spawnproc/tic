@@ -3,7 +3,7 @@
 -behaviour(websocket_client_handler).
 -include("bitmex.hrl").
 -include("core.hrl").
--export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/7]).
+-export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/6]).
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
@@ -15,10 +15,10 @@ action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P}=SymRec,Debug) when Sym == "
 
 action(_,_,_,_) -> ok.
 
-order(_,"delete",_,_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
-order(A,X,_,_,S,[],M)       -> [0,X];
-order(_,_,"Buy",S,SS,P,M)   -> [book:add(#tick{price=P,size=S}),lists:concat(["+",SS]),P];
-order(_,_,"Sell",S,SS,P,M)  -> [book:add(#tick{price=P,size=-S}),lists:concat(["-",SS]),P].
+order(_,"delete",_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
+order(A,X,_,_,[],M)       -> [0,X];
+order(_,_,"Buy",S,P,M)   -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
+order(_,_,"Sell",S,P,M)  -> [book:add(#tick{price=P,size=-trade:nn(S)}),lists:concat(["-",S]),P].
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).
