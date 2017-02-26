@@ -22,13 +22,14 @@ print() ->
     F      = fun(X, Y) -> X#tick.price < Y#tick.price end,
     Sorted = lists:sort(F, kvs:all(tick)),
 
-    {PW,SW} = lists:foldr(fun(#tick{size=S,price=P,uid=I},{X,Y}) ->
-            { erlang:max(X,length(P)),
-              erlang:max(Y,length(integer_to_list(S))) } end, {0,0}, Sorted),
+    {PI,PW,SW} = lists:foldr(fun(#tick{size=S,price=P,uid=UID},{I,X,Y}) ->
+                 { erlang:max(I,length(integer_to_list(UID))),
+                   erlang:max(X,length(P)),
+                   erlang:max(Y,length(integer_to_list(S))) } end, {0,0,0}, Sorted),
 
-    io:format("~s ~s ~s~n", [string:right("No",4,$ ),
-                             string:right("Price * 10e8",PW,$ ),
-                             string:left("Size * 10e8",SW,$ )]),
+    io:format("~s ~s ~s~n", [string:right("Id",PI,$ ),
+                             string:left("Price.10e8",PW,$ ),
+                             string:right("Size.10e8",SW,$ )]),
 
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
@@ -36,7 +37,7 @@ print() ->
                                     (#tick{size=S,price=P,uid=I},{D,Acc}) ->
 
     io:format("~s ~s ~s~n",
-            [ string:right(integer_to_list(I),4,$ ),
+            [ string:right(integer_to_list(I),PI,$ ),
               string:right(P,PW,$ ),
               string:right(trade:p(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
 
