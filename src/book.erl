@@ -29,7 +29,7 @@ print() ->
 
     io:format("~s ~s ~s~n", [string:right("Id",PI,$ ),
                              string:left("Price.10e8",PW,$ ),
-                             string:right("Size.10e8",SW,$ )]),
+                             string:left("Size.10e8",SW,$ )]),
 
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
@@ -39,7 +39,7 @@ print() ->
     io:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
               string:right(P,PW,$ ),
-              string:right(integer_to_list(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:left(integer_to_list(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[trade:p(Total)]).
