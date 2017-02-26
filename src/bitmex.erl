@@ -10,13 +10,13 @@
 route(#bitmex{table=T,action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(B,Ac,X,M) end, [], [X||X<-D]).
 
-action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P}=SymRec,Debug) when Sym == "XBTUSD" ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,SymRec]);
+action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS},Debug) when Sym == "XBTUSD" ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,Debug,TS]);
 
 action(_,_,_,_) -> ok.
 
 order(A,X,_,_,[],M)       -> [];
-order(_,"delete",_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
+order(A,"delete",_,S,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
 order(_,_,"Buy",S,P,M)    -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
 order(_,_,"Sell",S,P,M)   -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 

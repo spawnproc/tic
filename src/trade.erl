@@ -8,12 +8,12 @@
 venues() -> [{gdax,   "wss://ws-feed.gdax.com"},
              {bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,instruments"}].
 
-order_trace(Venue,[A,Sym,S,P,Side,Debug]) ->
+order_trace(Venue,[A,Sym,S,P,Side,Debug,Timestamp]) ->
     {{Y,M,D},_}=calendar:universal_time(),
     file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
-    %io:format("~p:",[[Sym,A,Side,S,normal(p(P)),Debug]]),
-    Order = list_to_binary(sym:f(Venue:order(Sym,A,Side,normal(p(S)),normal(p(P)),Debug))),
+    %kvs:info(gdax,"~p:",[[Sym,A,Side,S,normal(p(P)),Debug,Timestamp]]),
+    Order = list_to_binary(sym:f(Timestamp,Venue:order(Sym,A,Side,normal(p(S)),normal(p(P)),Debug))),
     %io:format("~p~n\r",[Order]),
     file:write_file(FileName, Order, [raw, binary, append, read, write]).
 

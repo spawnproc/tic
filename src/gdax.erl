@@ -9,19 +9,19 @@
 
 route(#gdax{order_type="limit"},D) -> ok;
 
-route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]);
+route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]);
 
-route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]);
+route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,time=T},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]);
 
-route(#gdax{type=T,size=S,price=P,side=Side,reason=A,product_id=Sym},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]).
+route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]).
 
 order(A,X,_,_,[],M)         -> [];
-order(_,"canceled",_,_,P,M) -> [book:remove(#tick{price=P}),"-0"];
-order(_,_,"buy",SS,P,M)     -> [book:add(#tick{price=P,size=trade:nn(SS)}),lists:concat(["+",SS]),P];
-order(_,_,"sell",SS,P,M)    -> [book:add(#tick{price=P,size=- trade:nn(SS)}),lists:concat(["-",SS]),P].
+order(A,"canceled",_,_,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
+order(_,_,"buy",S,P,M)      -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
+order(_,_,"sell",S,P,M)     -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
