@@ -25,7 +25,7 @@ print() ->
     {PI,PW,SW} = lists:foldr(fun(#tick{size=S,price=P,uid=UID},{I,X,Y}) ->
                  { erlang:max(I,length(integer_to_list(UID))),
                    erlang:max(X,length(P)),
-                   erlang:max(Y,length(integer_to_list(S))) } end, {0,0,0}, Sorted),
+                   erlang:max(Y,length(integer_to_list(S))) } end, {4,0,0}, Sorted),
 
     io:format("~s ~s ~s~n", [string:right("Id",PI,$ ),
                              string:left("Price.10e8",PW,$ ),
@@ -39,7 +39,7 @@ print() ->
     io:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
               string:right(P,PW,$ ),
-              string:right(trade:p(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:right(integer_to_list(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[trade:p(Total)]).

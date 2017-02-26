@@ -17,8 +17,8 @@ action(_,_,_,_) -> ok.
 
 order(_,"delete",_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
 order(A,X,_,_,[],M)       -> [0,X];
-order(_,_,"Buy",S,P,M)   -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
-order(_,_,"Sell",S,P,M)  -> [book:add(#tick{price=P,size=-trade:nn(S)}),lists:concat(["-",S]),P].
+order(_,_,"Buy",S,P,M)    -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
+order(_,_,"Sell",S,P,M)   -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).

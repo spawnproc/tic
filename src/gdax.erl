@@ -17,9 +17,8 @@ route(#gdax{type=T,size=S,price=P,side=Side,reason=A,product_id=Sym},D) ->
     trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]).
 
 order(_,"canceled",_,_,P,M) -> [book:remove(#tick{price=P}),"-0"];
-order(A,X,_,_,[],M)         -> [0,X];
 order(_,_,"buy",SS,P,M)     -> [book:add(#tick{price=P,size=trade:nn(SS)}),lists:concat(["+",SS]),P];
-order(_,_,"sell",SS,P,M)    -> [book:add(#tick{price=P,size=-trade:nn(SS)}),lists:concat(["-",SS]),P].
+order(_,_,"sell",SS,P,M)    -> [book:add(#tick{price=P,size=- trade:nn(SS)}),lists:concat(["-",SS]),P].
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
