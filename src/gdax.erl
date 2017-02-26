@@ -20,7 +20,7 @@ route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T},D) ->
 
 order(A,X,_,_,[],M)         -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
 order(A,"canceled",_,_,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
-order(_,_,"buy",S,P,M)      -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
+order(_,_,"buy",S,P,M)      -> [book:add(#tick{price=P,size=  trade:nn(S)}),lists:concat(["+",S]),P];
 order(_,_,"sell",S,P,M)     -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.

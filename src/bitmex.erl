@@ -15,7 +15,7 @@ action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS},Debug) ->
 
 order(A,X,_,_,[],M)       -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
 order(A,"delete",_,S,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
-order(_,_,"Buy",S,P,M)    -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
+order(_,_,"Buy",S,P,M)    -> [book:add(#tick{price=P,size=  trade:nn(S)}),lists:concat(["+",S]),P];
 order(_,_,"Sell",S,P,M)   -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 state(State)      -> State + 1.
