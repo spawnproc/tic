@@ -12,9 +12,11 @@ order_trace(Venue,[A,Sym,S,P,Side,Debug,Timestamp]) ->
     {{Y,M,D},_}=calendar:universal_time(),
     file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
-    Order = list_to_binary(sym:f(Timestamp,Venue:order(Sym,A,Side,normal(p(S)),normal(p(P)),Debug))),
-    io:format("~p:~p:~p:~p~n\r",[Venue,Sym,Side,Order]),
-    file:write_file(FileName, Order, [raw, binary, append, read, write]).
+    Order = lists:flatten(sym:f(Timestamp,Venue:order(Sym,A,Side,normal(p(S)),normal(p(P)),Debug))),
+    case application:get_env(trade,log,hide) of
+         show -> io:format("~p:~p:~p:~s\r",[Venue,Sym,Side,Order]);
+            _ -> skip end,
+    file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
 
 precision()   -> 8.
 log_modules() -> [ bitmex, gdax ].

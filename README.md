@@ -46,6 +46,8 @@ $ tail priv/gdax/2017-2-26/BTC-USD
 Commands
 --------
 
+## Book Print
+
 ```
 > book:print().
   Id Price.10e8   Size.10e8
@@ -81,6 +83,22 @@ Commands
 Depth: 28
 Total: 393844763
 ok
+```
+
+## Show Log
+
+```
+> sym:hide().
+ok
+> sym:show().
+ok
+>
+gdax:"ETH-BTC":"sell":2017-02-26T16:06:55.749000Z:[110 -0]
+gdax:"BTC-GBP":"buy":2017-02-26T16:06:55.748000Z:[878 +005000000 94020000000]
+gdax:"ETH-BTC":"sell":2017-02-26T16:06:55.768000Z:[93 -17664952000 001190000]
+gdax:"ETH-BTC":"sell":2017-02-26T16:06:55.778000Z:[93 -34614317000 001190000]
+gdax:"ETH-BTC":"sell":2017-02-26T16:06:55.808000Z:[516 -0]
+gdax:"BTC-EUR":"sell":2017-02-26T16:06:55.805000Z:[518 -0]
 ```
 
 Credits
