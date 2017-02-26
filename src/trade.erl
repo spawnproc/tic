@@ -9,19 +9,21 @@ venues() -> [{gdax,   "wss://ws-feed.gdax.com"},
              {bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,instruments"}].
 
 order_trace(Venue,[A,Sym,S,P,Side,Debug]) ->
-     {{Y,M,D},_}=calendar:universal_time(),
-     file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
-     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
-     kvs:info(Venue,"~p~n",[[Sym,A,Side,s(S),S,normal(p(P)),Debug]]),
-     Order = list_to_binary(sym:f(Venue:order(Sym,A,Side,s(S),S,normal(p(P)),Debug))),
-     file:write_file(FileName, Order, [raw, binary, append, read, write]).
+    {{Y,M,D},_}=calendar:universal_time(),
+    file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
+    FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
+    kvs:info(Venue,"~p~n",[[Sym,A,Side,s(S),S,normal(p(P))]]),
+    Order = list_to_binary(sym:f(Venue:order(Sym,A,Side,s(S),S,normal(p(P)),Debug))),
+    kvs:info(Venue,"~p~n~n",[Order]),
+    file:write_file(FileName, Order, [raw, binary, append, read, write]).
 
 precision()   -> 8.
-log_modules() -> [ bitmex, gdax ].
+log_modules() -> [ trade, bitmex, gdax ].
 init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues() ] } }.
 ws(Venue,URL) -> {Venue,{websocket_client,start_link,[URL,Venue,[]]},permanent,1000,worker,[websocket_client]}.
-dirs()        -> file:make_dir("priv"), [ file:make_dir(lists:concat(["priv/",X])) || X <- log_modules() ].
-start(_,_)    -> dirs(), kvs:join(), book:media(), supervisor:start_link({local,ticker},?MODULE,[]).
+dirs()        -> file:make_dir("priv"), [ file:make_dir(lists:concat(["priv/",X])) || X <- tl(log_modules()) ].
+start(_,_)    -> dirs(), kvs:join(), kvs:put({id_seq,"tick",1}),
+                 supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 
 s([])                   -> 0;

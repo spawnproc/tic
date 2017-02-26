@@ -7,23 +7,19 @@
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
-route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sy},D) ->
-    trade:order_trace(?MODULE,[A,Sy,S,P,Side,D]);
+route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]);
 
-route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sy},D) ->
-    trade:order_trace(?MODULE,[A,Sy,S,P,Side,D]);
+route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]);
 
-route(#gdax{type=T,size=S,price=P,side=Side,reason=A,product_id=Sy},D) ->
-    trade:order_trace(?MODULE,[A,Sy,S,P,Side,D]).
+route(#gdax{type=T,size=S,price=P,side=Side,reason=A,product_id=Sym},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]).
 
-order(_,[],_,0,_,_,M)                                     -> [0,"-0"];
-order(_,"canceled",_,_,_,_,M)                             -> [0,"-0"];
-order(_,_,_,_,[],P,M)                                     -> [0,P];
-order(_,_,"buy",S,SS,[],M) when is_float(S) andalso S > 0 -> [0,lists:concat(["+",SS])];
-order(_,_,_,S,SS,[],M)                                    -> [0,SS];
-order(_,_,"buy",S,SS,P,M) when is_float(S) andalso S > 0  -> [0,lists:concat(["+",SS]),P];
-order(_,_,_,S,SS,P,M) when S > 0                          -> [0,lists:concat(["+",SS]),P];
-order(_,_,_,S,SS,P,M)                                     -> [0,SS,P].
+order(_,"canceled",_,_,_,P,M) -> [book:remove(#tick{price=P}),"-0"];
+order(A,X,_,_,S,[],M)         -> [0,X];
+order(_,_,"buy",S,SS,P,M)     -> [book:add(#tick{price=P,size=S}),lists:concat(["+",SS]),P];
+order(_,_,"sell",S,SS,P,M)    -> [book:add(#tick{price=P,size=-S}),lists:concat(["-",SS]),P].
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.

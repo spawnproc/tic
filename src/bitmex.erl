@@ -10,14 +10,15 @@
 route(#bitmex{table=T,action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(B,Ac,X,M) end, [], [X||X<-D]).
 
-action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P}=SymRec,Debug) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,SymRec]).
+action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P}=SymRec,Debug) when Sym == "XBTUSD" ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,SymRec]);
 
-order(_,"delete",_,_,S,_,M)         -> [0,"-0"];
-order(_,_,"Buy",_,S,[],M) when S >0 -> [0,lists:concat(["+",S])];
-order(_,_,_,_,S,[],M)               -> [0,lists:concat(["-",S])];
-order(_,_,"Buy",_,S,P,M) when S > 0 -> [0,lists:concat(["+",S]),P];
-order(_,_,_,_,S,P,M)                -> [0,lists:concat(["-",S]),P].
+action(_,_,_,_) -> ok.
+
+order(_,"delete",_,_,S,P,M) -> [book:remove(#tick{price=P}),"-0"];
+order(A,X,_,_,S,[],M)       -> [0,X];
+order(_,_,"Buy",S,SS,P,M)   -> [book:add(#tick{price=P,size=S}),lists:concat(["+",SS]),P];
+order(_,_,"Sell",S,SS,P,M)  -> [book:add(#tick{price=P,size=-S}),lists:concat(["-",SS]),P].
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).
