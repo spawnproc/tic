@@ -6,7 +6,7 @@
 
 metainfo() ->
     #schema{name = trading, tables = [
-          #table{name=tick, fields=record_info(fields,tick),keys=[id,price], copy_type=ram_copies } ]}.
+          #table{name=tick, fields=record_info(fields,tick),keys=[id,price], copy_type=disc_copies } ]}.
 
 add(#tick{price=P,size=S}=T) ->
    case kvs:index(tick,price,P) of
