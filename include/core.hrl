@@ -1,2 +1,3 @@
 
--record(ctx, { user=[] }).
+-record(ctx,  { user=[] }).
+-record(tick, { uid=[], time=[], price=[], id=[], size=[], side=[] }).

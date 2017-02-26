@@ -10,7 +10,8 @@
 instance() -> #sym{}.
 post({Data},#ctx{user=User}) -> from_json(Data, instance()).
 
-f([A,B])     -> io_lib:format("[~p ~s]~n",    [A,B]);
-f([A,B,C])   -> io_lib:format("[~p ~s ~s]~n", [A,B,C]);
-f([A,B,C,D]) -> io_lib:format("[~p ~s ~s]~n", [A,B,C]), io:format("~p~n", [D]);
-f(X)         -> io_lib:format("[~p]~n",       [X]).
+f(T,[])        -> [];
+f(T,[A,B])     -> io_lib:format("~s:[~p ~s]~n",    [T,A,B]);
+f(T,[A,B,C])   -> io_lib:format("~s:[~p ~s ~s]~n", [T,A,B,C]);
+f(T,[A,B,C,D]) -> io:format("~p~n", [D]), io_lib:format("~s:[~p ~s ~s]~n", [T,A,B,C]);
+f(T,X)         -> io_lib:format("~s:[~p]~n",       [T,X]).

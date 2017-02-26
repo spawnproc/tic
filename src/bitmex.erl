@@ -3,29 +3,32 @@
 -behaviour(websocket_client_handler).
 -include("bitmex.hrl").
 -include("core.hrl").
--export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/7]).
+-export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/6]).
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
-route(#bitmex{table=T,action=Ac,data=D},M)-> lists:foldl(fun (X,A) -> action(Ac,X,M) end, [], [X||X<-D]).
-action(A,#sym{symbol=Sy,side=Side,size=S,price=P},Debug) -> trade:order_trace(?MODULE,A,Sy,S,P,Side,Debug).
+route(#bitmex{table=T,action=Ac,data=D}=B,M) ->
+    lists:foldl(fun (X,A) -> action(B,Ac,X,M) end, [], [X||X<-D]).
 
-order(_,"delete",_,_,S,_,M)         -> [0,"-0"];
-order(_,_,"Buy",_,S,[],M) when S >0 -> [0,lists:concat(["+",S])];
-order(_,_,_,_,S,[],M)               -> [0,lists:concat(["-",S])];
-order(_,_,"Buy",_,S,P,M) when S > 0 -> [0,lists:concat(["+",S]),P];
-order(_,_,_,_,S,P,M)                -> [0,lists:concat(["-",S]),P];
-order(Sym,A,Side,_,S,P,M)           -> [Sym,A,Side,S,P]. % default all
+action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS},Debug) when Sym == "XBTUSD" ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,Debug,TS]);
+
+action(_,_,_,_) -> ok.
+
+order(A,X,_,_,[],M)       -> [];
+order(A,"delete",_,S,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
+order(_,_,"Buy",S,P,M)    -> [book:add(#tick{price=P,size=trade:nn(S)}),lists:concat(["+",S]),P];
+order(_,_,"Sell",S,P,M)   -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).
 instance()        -> #bitmex{}.
-post({Data}, Ctx) -> Bitmex=from_json(Data, instance()), #bitmex{data=D}=Bitmex,
-                     Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- D]}.
+post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
+                     Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- Bitmex#bitmex.data]}.
 
 init([], _)                               -> {ok, 1, 100}.
 websocket_info(start, _, State)           -> {reply, <<>>, State}.
-websocket_terminate(_, _, _)              -> ok.
+websocket_terminate(_, _, _)              -> kvs:info(?MODULE,"terminated",[]), ok.
 websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}.
