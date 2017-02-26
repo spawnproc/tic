@@ -1,5 +1,5 @@
 {application, trade, [
-    {description,  "Erlang Trading Platform"},
+    {description,  "TICK Trading Platform"},
     {vsn,          "0.2"},
     {applications, [kernel, stdlib, crypto, public_key, asn1, ssl]},
     {modules, []},
