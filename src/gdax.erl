@@ -7,6 +7,8 @@
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
+route(#gdax{order_type="limit"},D) -> ok;
+
 route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym},D) ->
     trade:order_trace(?MODULE,[A,Sym,S,P,Side,D]);
 

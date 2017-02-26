@@ -12,9 +12,9 @@ order_trace(Venue,[A,Sym,S,P,Side,Debug]) ->
     {{Y,M,D},_}=calendar:universal_time(),
     file:make_dir(lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D])),
     FileName = lists:concat(["priv/",Venue,"/",Y,"-",M,"-",D,"/",Sym]),
-    %io:format("~p:",[[Sym,A,Side,S,normal(p(P))]]),
+    io:format("~p:",[[Sym,A,Side,S,normal(p(P)),Debug]]),
     Order = list_to_binary(sym:f(Venue:order(Sym,A,Side,normal(p(S)),normal(p(P)),Debug))),
-    %io:format("~p~n\r",[Order]),
+    io:format("~p~n\r",[Order]),
     file:write_file(FileName, Order, [raw, binary, append, read, write]).
 
 precision()   -> 8.
