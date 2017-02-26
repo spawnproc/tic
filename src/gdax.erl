@@ -32,6 +32,10 @@ websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 
 state(State)   -> State + 1.
 print(Msg)     -> route(post(jsone:decode(Msg),#ctx{}),Msg).
-subscribe()    -> websocket_client:cast(self(), {text, <<"{\"type\":\"subscribe\",\"product_ids\": [\"BTC-USD\",\"BTC-EUR\",\"BTC-GBP\",\"ETH-USD\",\"ETH-BTC\",\"ETH-USD\",\"ETH-BTC\"]}">>}).
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).
+subscribe()    -> websocket_client:cast(self(),
+                  {text, jsone:encode([{type,subscribe},
+                                       {product_ids,['BTC-USD','BTC-EUR',
+                                                     'BTC-GBP','ETH-USD',
+                                                     'ETH-BTC']}])}).
