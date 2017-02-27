@@ -7,6 +7,13 @@
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
+name("BTC-USD") -> btc_usd;
+name("BTC-EUR") -> btc_eur;
+name("BTC-GBP") -> btc_gpb;
+name("ETH-BTC") -> eth_btc;
+name("ETH-USD") -> eth_usd;
+name(X) -> [].
+
 route(#gdax{order_type="limit"},D) -> ok;
 
 route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T},D) ->
@@ -18,10 +25,10 @@ route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,t
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T},D) ->
     trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]).
 
-order(A,X,_,_,[],M)         -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
-order(A,"canceled",_,_,P,M) -> [book:remove(#tick{price=P,id=M}),"-0"];
-order(_,_,"buy",S,P,M)      -> [book:add(#tick{price=P,size=  trade:nn(S)}),lists:concat(["+",S]),P];
-order(_,_,"sell",S,P,M)     -> [book:add(#tick{price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
+order(Sym,_,_,_,[],M)         -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
+order(Sym,"canceled",_,_,P,M) -> [book:del(#tick{sym=name(Sym),price=P,id=M}),"-0"];
+order(Sym,_,"buy",S,P,M)      -> [book:add(#tick{sym=name(Sym),price=P,size=  trade:nn(S)}),lists:concat(["+",S]),P];
+order(Sym,_,"sell",S,P,M)     -> [book:add(#tick{sym=name(Sym),price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
@@ -38,4 +45,4 @@ subscribe()    -> websocket_client:cast(self(),
                   {text, jsone:encode([{type,subscribe},
                                        {product_ids,['BTC-USD','BTC-EUR',
                                                      'BTC-GBP','ETH-USD',
-                                                     'ETH-BTC']}])}).
+                                                     'ETH-BTC','BTC-EUR','ETH-EUR' ]}])}).

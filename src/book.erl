@@ -4,40 +4,46 @@
 -include_lib("kvs/include/kvs.hrl").
 -compile(export_all).
 
+instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
+
 metainfo() ->
-    #schema { name      = trading , tables = [
-     #table { name      = tick,
-              fields    = record_info(fields, tick),
-              keys      = [ id , price ],
-              copy_type = disc_copies } ] }.
+    #schema { name = trading, tables = [
+     #table { name = btc_usd, fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = btc_eur, fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = btc_gpb, fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = eth_btc, fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = eth_usd, fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
-add(#tick{price=P,size=S}=T) ->
-   case kvs:index(tick,price,P) of
-        [] -> UID=kvs:next_id(tick,1), kvs:put(T#tick{uid=UID,price=P,size=S}), UID;
-        [#tick{uid=UID,size=XS}=X]  -> kvs:put(X#tick{size=XS+S}), UID end.
+add(#tick{sym=[]}) -> 0;
+add(#tick{price=P,size=S,sym=Sym}=T) ->
+   case kvs:index(Sym,price,P) of
+        [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] -> kvs:put(setelement(6,X,XS+S)), UID;
+        [] -> UID=kvs:next_id(Sym,1),
+              kvs:put(setelement(6,setelement(1,setelement(2,T,UID),Sym),S)), UID end.
 
-remove(#tick{price=P,id=A}) ->
-   case kvs:index(tick,price,P) of
+del(#tick{sym=[]}) -> 0;
+del(#tick{price=P,id=A,sym=Sym}) ->
+   case kvs:index(Sym,price,P) of
         [] -> 0;
-        [#tick{uid=UID,size=XS}=X]  -> kvs:put(X#tick{size=0}), UID end.
+        [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] -> kvs:put(setelement(6,X,0)), UID end.
 
-print() ->
-    F      = fun(X, Y) -> trade:nn(X#tick.price) < trade:nn(Y#tick.price) end,
-    Sorted = lists:sort(F, kvs:all(tick)),
+print(Book) ->
+    F      = fun(X, Y) -> trade:nn(element(4,X)) < trade:nn(element(4,Y)) end,
+    Sorted = lists:sort(F, kvs:all(Book)),
 
-    {PI,PW,SW} = lists:foldr(fun(#tick{size=S,price=P,uid=UID},{I,X,Y}) ->
+    {PI,PW,SW} = lists:foldr(fun({_,UID,_,P,_,S,_,_},{I,X,Y}) ->
                  { erlang:max(I,length(integer_to_list(UID))),
                    erlang:max(X,length(P)),
                    erlang:max(Y,length(integer_to_list(S))) } end, {4,0,0}, Sorted),
 
     io:format("~s ~s ~s~n", [string:right("Id",PI,$ ),
-                             string:left("Price.10e8",PW,$ ),
-                             string:left("Size.10e8",SW,$ )]),
+                             string:left("Price",PW,$ ),
+                             string:left("Size",SW,$ )]),
 
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
-    {Depth,Total}  = lists:foldr(fun(#tick{size=0},A) -> A;
-                                    (#tick{size=S,price=P,uid=I},{D,Acc}) ->
+    {Depth,Total}  = lists:foldr(fun({_,_,_,_,_,0,_,_},A) -> A;
+                                    ({_,I,_,P,_,S,_,_},{D,Acc}) ->
 
     io:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
