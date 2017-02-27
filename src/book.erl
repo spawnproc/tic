@@ -15,41 +15,44 @@ metainfo() ->
      #table { name = 'eth_btc', fields = record_info(fields, tick), keys=[id,price] },
      #table { name = 'eth_usd', fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
-add(#tick{sym=[]}) -> 0;
+cat(S,bid) -> lists:concat(["+",S]);
+cat(S,ask) -> lists:concat([S]).
 
-add(#tick{price=P,size=S,sym=Sym,id=O}=T) ->
+add(#tick{sym=[]}) -> [];
+
+add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
    case kvs:index(Sym,price,P) of
-        [{Sym,UID,Price,Id,XS,Sym}=X] ->
+        [{Sym,UID,P,Id,XS,Sym,_}=X] ->
               kvs:put(setelement(#tick.size,X,XS+S)),
-              kvs:put(#order{uid=O,local_id=UID,sym=Sym}), UID;
+              kvs:put(#order{uid=O,local_id=UID,sym=Sym}), [UID,cat(S,Side),P];
         [] -> UID=kvs:next_id(Sym,1),
               kvs:put(setelement(1,
                       setelement(#tick.size,
-                      setelement(#tick.uid,T,UID),S),Sym)), UID end.
+                      setelement(#tick.uid,T,UID),S),Sym)), [UID,cat(S,Side),P] end.
 
-del(#tick{sym=[]}) -> 0;
+del(#tick{sym=[]}) -> [];
 
 del(#tick{price=[],id=O,sym=Sym}) ->
    case kvs:get(order,O) of
-        {error,_} -> 0;
+        {error,_} -> [];
         {ok,#order{uid=O,local_id=UID}} ->
               case kvs:get(Sym,UID) of
                    {ok,X} -> kvs:put(setelement(#tick.size,X,0)),
-                             kvs:delete(order,O), UID;
-                        _ -> UID end end;
+                             kvs:delete(order,O), [UID,"-0"];
+                        _ -> [UID,"-0"] end end;
 
 del(#tick{price=P,id=O,sym=Sym}) ->
    case kvs:index(Sym,price,P) of
-        [] -> 0;
-        [{Sym,UID,Price,Id,XS,Sym}=X] ->
+        [] -> [];
+        [{Sym,UID,P,Id,XS,Sym,_}=X] ->
               kvs:delete(order,O),
-              kvs:put(setelement(#tick.size,X,0)), UID end.
+              kvs:put(setelement(#tick.size,X,0)), [UID,"-0"] end.
 
 print(Book) ->
     F      = fun(X, Y) -> trade:nn(element(#tick.price,X)) < trade:nn(element(#tick.price,Y)) end,
     Sorted = lists:sort(F, kvs:all(Book)),
 
-    {PI,PW,SW} = lists:foldr(fun({_,UID,P,_,S,_},{I,X,Y}) ->
+    {PI,PW,SW} = lists:foldr(fun({_,UID,P,O,S,_,_},{I,X,Y}) ->
                  { erlang:max(I,length(integer_to_list(UID))),
                    erlang:max(X,length(P)),
                    erlang:max(Y,length(integer_to_list(S))) } end, {4,0,0}, Sorted),
@@ -60,8 +63,8 @@ print(Book) ->
 
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
-    {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_},A) -> A;
-                                    ({_,I,P,_,S,_},{D,Acc}) ->
+    {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
+                                    ({_,I,P,O,S,_,_},{D,Acc}) ->
 
     io:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
