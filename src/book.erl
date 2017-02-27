@@ -48,6 +48,9 @@ del(#tick{price=P,id=O,sym=Sym}) ->
               kvs:delete(order,O),
               kvs:put(setelement(#tick.size,X,0)), [UID,"-0"] end.
 
+ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
+bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
+
 print(Book) ->
     F      = fun(X, Y) -> trade:nn(element(#tick.price,X)) < trade:nn(element(#tick.price,Y)) end,
     Sorted = lists:sort(F, kvs:all(Book)),
@@ -64,12 +67,12 @@ print(Book) ->
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
     {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
-                                    ({_,I,P,O,S,_,_},{D,Acc}) ->
+                                    ({_,I,P,O,S,_,Side},{D,Acc}) ->
 
-    io:format("~s ~s ~s~n",
+    book:Side(io_lib:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
               string:right(trade:print_float(P),PW,$ ),
-              string:left(trade:print_float(integer_to_list(S)),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:left(trade:print_float(integer_to_list(S)),SW,$ ) ])), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[trade:print_float(trade:p(Total))]).
