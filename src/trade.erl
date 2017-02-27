@@ -39,14 +39,16 @@ c([])  -> [];
 c([X]) -> n([X,[]]);
 c(X)   -> n(X).
 
-print_float(X) ->
-    case string:tokens(X,"-+") of
-         [S,N] -> lists:concat([S,flo(N)]); [I] -> flo(I) end.
-
 flo(N) -> P = string:right(N,8,$0),
     lists:concat([case string:substr(N,1,erlang:max(length(N)-8,0)) of
-                 [] -> "0"; E -> string:strip(E, left, $0) end, ".",
+                 [] -> "0"; E -> case string:strip(E, left, $0) of
+                                 [] -> "0"; B -> B end end, ".",
                  case string:substr(P,length(P)-8+1,8) of
                  [] -> "0"; E -> case string:strip(E, right, $0) of
-                                 [] -> "0";
-                                  B -> B end end]).
+                                 [] -> "0"; B -> B end end]).
+
+print_float(X) ->
+    case X of
+         "+"++N -> lists:concat(["+",flo(N)]);
+         "-"++N -> lists:concat(["-",flo(N)]);
+              I -> flo(I) end.
