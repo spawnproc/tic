@@ -1,5 +1,5 @@
 -module(trade).
--description('Erlang Trading Platform').
+-description('TIC Trading Platform').
 -behaviour(supervisor).
 -behaviour(application).
 -compile(export_all).

@@ -8,11 +8,11 @@ instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
 metainfo() ->
     #schema { name = trading, tables = [
-     #table { name = btc_usd, fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = btc_eur, fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = btc_gpb, fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = eth_btc, fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = eth_usd, fields = record_info(fields, tick), keys=[id,price] }   ] }.
+     #table { name = 'btc_usd', fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'btc_eur', fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'btc_gpb', fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'eth_btc', fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'eth_usd', fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
 add(#tick{sym=[]}) -> 0;
 add(#tick{price=P,size=S,sym=Sym}=T) ->
@@ -21,7 +21,7 @@ add(#tick{price=P,size=S,sym=Sym}=T) ->
         [] -> UID=kvs:next_id(Sym,1),
               kvs:put(setelement(6,setelement(1,setelement(2,T,UID),Sym),S)), UID end.
 
-del(#tick{sym=[]}) -> 0;
+del(#tick{sym=[],id=A}) -> 0;
 del(#tick{price=P,id=A,sym=Sym}) ->
    case kvs:index(Sym,price,P) of
         [] -> 0;

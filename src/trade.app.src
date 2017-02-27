@@ -1,5 +1,5 @@
 {application, trade, [
-    {description,  "TICK Trading Platform"},
+    {description,  "TIC Trading Platform"},
     {vsn,          "0.2"},
     {applications, [kernel, stdlib, crypto, public_key, asn1, ssl]},
     {modules, []},
