@@ -54,8 +54,8 @@ print(Book) ->
 
     {PI,PW,SW} = lists:foldr(fun({_,UID,P,O,S,_,_},{I,X,Y}) ->
                  { erlang:max(I,length(integer_to_list(UID))),
-                   erlang:max(X,length(P)),
-                   erlang:max(Y,length(integer_to_list(S))) } end, {4,0,0}, Sorted),
+                   erlang:max(X,length(trade:print_float(P))),
+                   erlang:max(Y,length(trade:print_float(integer_to_list(S)))) } end, {4,0,0}, Sorted),
 
     io:format("~s ~s ~s~n", [string:right("Id",PI,$ ),
                              string:left("Price",PW,$ ),
@@ -68,8 +68,8 @@ print(Book) ->
 
     io:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
-              string:right(P,PW,$ ),
-              string:left(integer_to_list(S),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:right(trade:print_float(P),PW,$ ),
+              string:left(trade:print_float(integer_to_list(S)),SW,$ ) ]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
-    io:format("Total: ~s~n",[trade:p(Total)]).
+    io:format("Total: ~s~n",[trade:print_float(trade:p(Total))]).

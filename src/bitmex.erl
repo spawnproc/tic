@@ -17,9 +17,9 @@ action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,trdMatchID=OID}
     trade:order_trace(?MODULE,[A,Sym,S,P,Side,Debug,TS,OID]).
 
 order(Sym,_,_,_,[],M,O)       -> book:del(#tick{sym=name(Sym),id=O});
-order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),price=P,id=O});
-order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),price=P,id=O,size=  trade:nn(S), side=bid});
-order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),price=P,id=O,size=- trade:nn(S), side=ask}).
+order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,price=P});
+order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),id=O,price=P,size=  trade:nn(S), side=bid});
+order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),id=O,price=P,size=- trade:nn(S), side=ask}).
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).

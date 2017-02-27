@@ -38,3 +38,15 @@ nn(X)  -> list_to_integer(X).
 c([])  -> [];
 c([X]) -> n([X,[]]);
 c(X)   -> n(X).
+
+print_float(X) ->
+    case string:tokens(X,"-+") of
+         [S,N] -> lists:concat([S,flo(N)]); [I] -> flo(I) end.
+
+flo(N) -> P = string:right(N,8,$0),
+    lists:concat([case string:substr(N,1,erlang:max(length(N)-8,0)) of
+                 [] -> "0"; E -> string:strip(E, left, $0) end, ".",
+                 case string:substr(P,length(P)-8+1,8) of
+                 [] -> "0"; E -> case string:strip(E, right, $0) of
+                                 [] -> "0";
+                                  B -> B end end]).
