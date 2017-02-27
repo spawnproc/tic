@@ -55,4 +55,5 @@ print_float(X) ->
     case X of
          "+"++N -> lists:concat(["+",flo(N)]);
          "-"++N -> lists:concat(["-",flo(N)]);
-              I -> flo(I) end.
+              I when is_list(I) -> flo(I);
+              I -> flo(p(I)) end.

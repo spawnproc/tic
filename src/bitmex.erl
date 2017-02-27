@@ -20,7 +20,8 @@ route(#bitmex{table=T,action=Ac,data=D}=B,M) ->
 action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,trdMatchID=OID},Debug) ->
     trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID]).
 
-trade(Sym,A,Side,S,P,M,O)     -> [trade,P,S].
+trade(Sym,A,"Buy",S,P,M,O)    -> [trade,P,trade:nn(S)];
+trade(Sym,A,"Sell",S,P,M,O)   -> [trade,P,-trade:nn(S)].
 
 order(Sym,_,_,_,[],M,O)       -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,price=P});
