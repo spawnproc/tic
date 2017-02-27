@@ -29,8 +29,8 @@ route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,t
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]).
 
-trade(Sym,A,"buy",S,P,M,O)      -> [trade,P,S];
-trade(Sym,A,"sell",S,P,M,O)     -> [trade,P,S].
+trade(Sym,A,"buy",S,P,M,O)      -> [trade,P,book:cat(S,bid)];
+trade(Sym,A,"sell",S,P,M,O)     -> [trade,P,book:cat(S,ask)].
 
 order(Sym,_,_,_,[],M,O)         -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,"canceled",_,_,P,M,O) -> book:del(#tick{sym=name(Sym),price=P,id=O});

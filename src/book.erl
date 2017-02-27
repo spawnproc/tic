@@ -67,7 +67,9 @@ print(Book) ->
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
     {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
-                                    ({_,I,P,O,S,_,Side},{D,Acc}) ->
+                                    ({_,I,P,O,S,_,_},{D,Acc}) ->
+
+    Side = case S < 0 of true -> ask; _ -> bid end,
 
     io:fwrite(<<"~s">>,[book:Side(io_lib:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
