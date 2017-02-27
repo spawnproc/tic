@@ -30,14 +30,13 @@ del(#tick{sym=[]}) -> 0;
 del(#tick{price=[],id=O,sym=Sym}) ->
    case kvs:get(orders,O) of
         {error,_} -> 0;
-        {ok,#orders{uid=A,local_id=UID}} ->
+        {ok,#orders{uid=O,local_id=UID}} ->
               case kvs:get(Sym,UID) of
                    {ok,X} -> kvs:put(setelement(6,X,0)),
                              kvs:delete(orders,O), UID;
                         _ -> UID end end;
 
-
-del(#tick{price=P,id=O,sym=Sym}) ->
+del(#tick{price=P,id=O,sym=Sym}=Tick) ->
    case kvs:index(Sym,price,P) of
         [] -> 0;
         [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] ->
