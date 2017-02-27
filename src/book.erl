@@ -69,10 +69,10 @@ print(Book) ->
     {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
                                     ({_,I,P,O,S,_,Side},{D,Acc}) ->
 
-    book:Side(io_lib:format("~s ~s ~s~n",
+    io:fwrite(<<"~s">>,[book:Side(io_lib:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
               string:right(trade:print_float(P),PW,$ ),
-              string:left(trade:print_float(integer_to_list(S)),SW,$ ) ])), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:left(trade:print_float(integer_to_list(S)),SW,$ ) ]))]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[trade:print_float(trade:p(Total))]).
