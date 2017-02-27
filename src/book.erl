@@ -24,11 +24,11 @@ add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
    case kvs:index(Sym,price,P) of
         [{Sym,UID,P,Id,XS,Sym,_}=X] ->
               kvs:put(setelement(#tick.size,X,XS+S)),
-              kvs:put(#order{uid=O,local_id=UID,sym=Sym}), [UID,cat(S,Side),P];
+              kvs:put(#order{uid=O,local_id=UID,sym=Sym}), [UID,P,cat(S,Side)];
         [] -> UID=kvs:next_id(Sym,1),
               kvs:put(setelement(1,
                       setelement(#tick.size,
-                      setelement(#tick.uid,T,UID),S),Sym)), [UID,cat(S,Side),P] end.
+                      setelement(#tick.uid,T,UID),S),Sym)), [UID,P,cat(S,Side)] end.
 
 del(#tick{sym=[]}) -> [];
 

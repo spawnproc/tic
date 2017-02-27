@@ -3,7 +3,8 @@
 -behaviour(websocket_client_handler).
 -include("gdax.hrl").
 -include("core.hrl").
--export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/7]).
+-compile(export_all).
+-export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3]).
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
@@ -16,14 +17,19 @@ name(X) -> [].
 
 route(#gdax{order_type="limit"},D) -> ok;
 
+route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    trade:trace(?MODULE,[trade,A,Sym,S,P,Side,D,T,OID]);
+
 route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T,OID]);
+    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
 route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T,OID]);
+    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T,OID]).
+    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]).
+
+trade(Sym,A,Side,S,P,M,O)       -> [trade,P,S].
 
 order(Sym,_,_,_,[],M,O)         -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,"canceled",_,_,P,M,O) -> book:del(#tick{sym=name(Sym),price=P,id=O});
