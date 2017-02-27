@@ -8,6 +8,7 @@ instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
 metainfo() ->
     #schema { name = trading, tables = [
+     #table { name = orders,    fields = record_info(fields, orders) },
      #table { name = 'btc_usd', fields = record_info(fields, tick), keys=[id,price] },
      #table { name = 'btc_eur', fields = record_info(fields, tick), keys=[id,price] },
      #table { name = 'btc_gpb', fields = record_info(fields, tick), keys=[id,price] },
@@ -15,17 +16,33 @@ metainfo() ->
      #table { name = 'eth_usd', fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
 add(#tick{sym=[]}) -> 0;
-add(#tick{price=P,size=S,sym=Sym}=T) ->
+
+add(#tick{price=P,size=S,sym=Sym,id=O}=T) ->
    case kvs:index(Sym,price,P) of
-        [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] -> kvs:put(setelement(6,X,XS+S)), UID;
+        [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] ->
+              kvs:put(setelement(6,X,XS+S)),
+              kvs:put(#orders{uid=O,local_id=UID,sym=Sym}), UID;
         [] -> UID=kvs:next_id(Sym,1),
               kvs:put(setelement(6,setelement(1,setelement(2,T,UID),Sym),S)), UID end.
 
-del(#tick{sym=[],id=A}) -> 0;
-del(#tick{price=P,id=A,sym=Sym}) ->
+del(#tick{sym=[]}) -> 0;
+
+del(#tick{price=[],id=O,sym=Sym}) ->
+   case kvs:get(orders,O) of
+        {error,_} -> 0;
+        {ok,#orders{uid=A,local_id=UID}} ->
+              case kvs:get(Sym,UID) of
+                   {ok,X} -> kvs:put(setelement(6,X,0)),
+                             kvs:delete(orders,O), UID;
+                        _ -> UID end end;
+
+
+del(#tick{price=P,id=O,sym=Sym}) ->
    case kvs:index(Sym,price,P) of
         [] -> 0;
-        [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] -> kvs:put(setelement(6,X,0)), UID end.
+        [{Sym,UID,Time,Price,Id,XS,Side,Sym}=X] ->
+              kvs:delete(orders,O),
+              kvs:put(setelement(6,X,0)), UID end.
 
 print(Book) ->
     F      = fun(X, Y) -> trade:nn(element(4,X)) < trade:nn(element(4,Y)) end,

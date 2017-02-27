@@ -3,7 +3,7 @@
 -behaviour(websocket_client_handler).
 -include("bitmex.hrl").
 -include("core.hrl").
--export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/6]).
+-export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/7]).
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
@@ -13,13 +13,13 @@ name(X)         -> [].
 route(#bitmex{table=T,action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(B,Ac,X,M) end, [], [X||X<-D]).
 
-action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS},Debug) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,Debug,TS]).
+action(T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,trdMatchID=OID},Debug) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,Debug,TS,OID]).
 
-order(_,_,_,_,[],M)       -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
-order(Sym,"delete",_,S,P,M) -> [book:del(#tick{sym=name(Sym),price=P,id=M}),"-0"];
-order(Sym,_,"Buy",S,P,M)    -> [book:add(#tick{sym=name(Sym),price=P,size=  trade:nn(S)}),lists:concat(["+",S]),P];
-order(Sym,_,"Sell",S,P,M)   -> [book:add(#tick{sym=name(Sym),price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
+order(Sym,_,_,_,[],M,O)       -> [book:del(#tick{sym=name(Sym),id=O}),"-0"];
+order(Sym,"delete",_,S,P,M,O) -> [book:del(#tick{sym=name(Sym),price=P,id=O}),"-0"];
+order(Sym,_,"Buy",S,P,M,O)    -> [book:add(#tick{sym=name(Sym),price=P,id=O,size=  trade:nn(S)}),lists:concat(["+",S]),P];
+order(Sym,_,"Sell",S,P,M,O)   -> [book:add(#tick{sym=name(Sym),price=P,id=O,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).

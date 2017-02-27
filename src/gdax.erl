@@ -3,7 +3,7 @@
 -behaviour(websocket_client_handler).
 -include("gdax.hrl").
 -include("core.hrl").
--export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,order/6,post/2]).
+-export([init/2,websocket_handle/3,websocket_info/3,websocket_terminate/3,post/2,order/7]).
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
@@ -16,19 +16,19 @@ name(X) -> [].
 
 route(#gdax{order_type="limit"},D) -> ok;
 
-route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]);
+route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T,OID]);
 
-route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,time=T},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]);
+route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T,OID]);
 
-route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T},D) ->
-    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T]).
+route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    trade:order_trace(?MODULE,[A,Sym,S,P,Side,D,T,OID]).
 
-order(Sym,_,_,_,[],M)         -> kvs:info(?MODULE,"Empty Price: ~p~n",[M]), [];
-order(Sym,"canceled",_,_,P,M) -> [book:del(#tick{sym=name(Sym),price=P,id=M}),"-0"];
-order(Sym,_,"buy",S,P,M)      -> [book:add(#tick{sym=name(Sym),price=P,size=  trade:nn(S)}),lists:concat(["+",S]),P];
-order(Sym,_,"sell",S,P,M)     -> [book:add(#tick{sym=name(Sym),price=P,size=- trade:nn(S)}),lists:concat(["-",S]),P].
+order(Sym,_,_,_,[],M,O)         -> [book:del(#tick{sym=name(Sym),id=O}),"-0"];
+order(Sym,"canceled",_,_,P,M,O) -> [book:del(#tick{sym=name(Sym),price=P,id=O}),"-0"];
+order(Sym,_,"buy",S,P,M,O)      -> [book:add(#tick{sym=name(Sym),price=P,id=O,size=  trade:nn(S)}),lists:concat(["+",S]),P];
+order(Sym,_,"sell",S,P,M,O)     -> [book:add(#tick{sym=name(Sym),price=P,id=O,size=- trade:nn(S)}),lists:concat(["-",S]),P].
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
