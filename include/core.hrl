@@ -1,4 +1,4 @@
 
--record(ctx,    { user=[] }).
--record(tick,   { uid=[], time=[], price=[], id=[], size=[], side=[], sym=[] }).
--record(orders, { uid=[], local_id=[], sym=[] }).
+-record(ctx,    { uid=[] }).
+-record(order,  { uid=[], local_id=[], sym=[] }).
+-record(tick,   { uid=[], price=[], id=[], size=[], sym=[] }).

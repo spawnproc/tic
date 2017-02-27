@@ -1,14 +1,13 @@
 -module(sym).
 -behaviour(rest).
 -include("bitmex.hrl").
--include("core.hrl").
 -compile({parse_transform, rest}).
 -compile(export_all).
 -export([post/2]).
 -rest_record(sym).
 
 instance() -> #sym{}.
-post({Data},#ctx{user=User}) -> from_json(Data, instance()).
+post({Data},_) -> from_json(Data, instance()).
 
 f(T,[])         -> [];
 f(T,[0,B])      -> [];
