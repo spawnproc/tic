@@ -15,5 +15,3 @@ f(T,[A,B])      -> io_lib:format("~s:[~p ~s]~n",    [T,A,trade:print_float(B)]);
 f(T,[A,C,B])    -> io_lib:format("~s:[~p ~s ~s]~n", [T,A,trade:print_float(B),trade:print_float(C)]);
 f(T,X)          -> io_lib:format("~s:[~p]~n",       [T,X]).
 
-show() -> application:set_env(trade,log,show).
-hide() -> application:set_env(trade,log,hide).
