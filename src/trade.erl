@@ -5,8 +5,8 @@
 -compile(export_all).
 -export([start/2, stop/1, init/1]).
 
-venues() -> [{gdax,   "wss://ws-feed.gdax.com"},
-             {bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,execution,orderBookL2"}].
+venues() -> [{bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,execution,orderBookL2"},
+             {gdax,   "wss://ws-feed.gdax.com"}].
 
 trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID]) ->
     {{Y,M,D},_}=calendar:universal_time(),
