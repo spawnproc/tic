@@ -24,6 +24,7 @@ route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=S
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
 route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    io:format("change: ~p\r",[{S1,S2}]),
     trade:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID]);
 
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
