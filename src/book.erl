@@ -48,8 +48,9 @@ del(#tick{price=P,id=O,size=S,sym=Sym}) ->
          [{Sym,_,P,_,XS,Sym,Side}=X] ->
              case kvs:get(order,O) of
                   {error,_} -> [];
-                  {ok,#order{uid=O,local_id=UID}} -> kvs:put(setelement(#tick.size,X,XS+S)),
-                                                     kvs:delete(order,O), [UID] end end.
+                  {ok,#order{uid=O,local_id=UID}} ->
+                       kvs:put(setelement(#tick.size,X,XS+S)),
+                       kvs:delete(order,O), [UID] end end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
