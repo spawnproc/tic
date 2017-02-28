@@ -15,20 +15,17 @@ metainfo() ->
      #table { name = 'eth_btc', fields = record_info(fields, tick), keys=[id,price] },
      #table { name = 'eth_usd', fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
-size(S,bid) -> S;
-size(S,ask) -> -S.
-
 add(#tick{sym=[]}) -> [];
 
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
    case kvs:index(Sym,price,P) of
         [{Sym,UID,P,Id,XS,Sym,_}=X] ->
-              kvs:put(setelement(#tick.size,X,XS+size(S,Side))),
+              kvs:put(setelement(#tick.size,X,XS+S)),
               kvs:put(#order{uid=O,local_id=UID,sym=Sym}), [UID,P,S,Side];
         [] -> UID=kvs:next_id(Sym,1),
               kvs:put(setelement(1,
                       setelement(#tick.size,
-                      setelement(#tick.uid,T,UID),size(S,Side)),Sym)), [UID,P,S,Side] end.
+                      setelement(#tick.uid,T,UID),S),Sym)), [UID,P,S,Side] end.
 
 del(#tick{sym=[]}) -> [];
 
@@ -68,9 +65,7 @@ print(Book) ->
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
     {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
-                                    ({_,I,P,O,S,_,_},{D,Acc}) ->
-
-    Side = case S < 0 of true -> ask; _ -> bid end,
+                                    ({_,I,P,O,S,_,Side},{D,Acc}) ->
 
     io:fwrite(<<"~s">>,[book:Side(io_lib:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),
