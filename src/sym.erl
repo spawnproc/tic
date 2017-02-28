@@ -6,12 +6,13 @@
 -export([post/2]).
 -rest_record(sym).
 
-f(T,[])          -> [];
-f(T,[A])         -> io_lib:format("~s -~p 0~n",    [timestamp(),A]);
-f(T,[trade,P,S]) -> io_lib:format("~s ~s ~s~n",    [timestamp(),  trade:print_float(P),trade:print_float(S)]);
-f(T,[A,P,S,ask]) -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
-f(T,[A,P,S,bid]) -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
-f(T,X)           -> io_lib:format("~s ~p~n",       [timestamp(),X]).
+f(T,[])              -> [];
+f(T,[A])             -> io_lib:format("~s -~p 0~n",    [timestamp(),A]);
+f(T,[trade,P,S,bid]) -> io_lib:format("~s ~s ~s~n",    [timestamp(),  trade:print_float(P),trade:print_float(S)]);
+f(T,[trade,P,S,ask]) -> io_lib:format("~s ~s -~s~n",    [timestamp(), trade:print_float(P),trade:print_float(S)]);
+f(T,[A,P,S,ask])     -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
+f(T,[A,P,S,bid])     -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
+f(T,X)               -> io_lib:format("~s ~p~n",       [timestamp(),X]).
 
 pad(I,X)         -> string:left(integer_to_list(I),X,$0).
 instance()       -> #sym{}.

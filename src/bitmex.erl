@@ -22,8 +22,8 @@ route(_,_) -> [].
 action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,trdMatchID=OID}=Packet,Debug) ->
     trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID]).
 
-trade(Sym,A,"Buy",S,P,M,O)    -> [trade,P,S];
-trade(Sym,A,"Sell",S,P,M,O)   -> [trade,P,S].
+trade(Sym,A,"Buy",S,P,M,O)    -> [trade,P,trade:nn(S),bid];
+trade(Sym,A,"Sell",S,P,M,O)   -> [trade,P,trade:nn(S),ask].
 
 order(Sym,_,_,S,[],M,O)       -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
 order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
