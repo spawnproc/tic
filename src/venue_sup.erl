@@ -12,7 +12,7 @@ timer_restart({X,Y,Z},Timer) ->
 handle_info({timer,connect}, State=#state{endpoint=URL,venue=Venue,timer=Timer}) ->
     kvs:info(?MODULE,"Trying to connect: ~p~n",[State]),
     T = case Timer of
-                [] -> skip;
+                [] -> [];
                  _ -> try case websocket_client:start_link(URL, Venue, []) of
                                {ok,_} -> [];
                                {error,_} -> timer_restart({0,0,5},Timer) end

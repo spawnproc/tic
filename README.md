@@ -61,13 +61,14 @@ Commands
 
 ```
 > book:instruments().
-[btc_usd,btc_eur,btc_gpb,eth_btc,eth_usd]
+[bitmex_btc_usd,gdax_btc_usd,gdax_btc_eur,gdax_btc_gbp,
+gdax_eth_btc,gdax_eth_usd]
 ```
 
 ## Book Print
 
 ```
-> book:print(eth_usd).
+> book:print(bitmex_btc_usd).
   Id Price Size
 ---- ----- ----------
    7 15.15 -235.08011
