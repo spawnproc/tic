@@ -35,7 +35,7 @@ del(#tick{price=[],id=O,size=S,sym=Sym}) ->
         {ok,#order{uid=O,local_id=UID}} ->
               case kvs:get(Sym,UID) of
                    {ok,X} -> XS = element(#tick.size,X),
-                             kvs:put(setelement(#tick.size,X,XS-S)),
+                             kvs:put(setelement(#tick.size,X,XS+S)),
                              kvs:delete(order,O), [UID];
                         _ -> [UID] end end;
 
@@ -43,7 +43,7 @@ del(#tick{price=P,id=O,size=S,sym=Sym}) ->
    case kvs:index(Sym,price,P) of
         [] -> [];
         [{Sym,UID,P,Id,XS,Sym,_}=X] ->
-              kvs:put(setelement(#tick.size,X,XS-S)),
+              kvs:put(setelement(#tick.size,X,XS+S)),
               kvs:delete(order,O), [UID] end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
@@ -65,7 +65,9 @@ print(Book) ->
     io:format("~s ~s ~s~n", ["----",lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
     {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
-                                    ({_,I,P,O,S,_,Side},{D,Acc}) ->
+                                    ({_,I,P,O,S,_,_},{D,Acc}) ->
+
+    Side = case S < 0 of true -> ask; _ -> bid end,
 
     io:fwrite(<<"~s">>,[book:Side(io_lib:format("~s ~s ~s~n",
             [ string:right(integer_to_list(I),PI,$ ),

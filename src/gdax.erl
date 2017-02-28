@@ -24,7 +24,7 @@ route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=S
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
 route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    trade:trace(?MODULE,[order,A,Sym,S2-S1,P,Side,D,T,OID]);
+    trade:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID]);
 
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]).
@@ -35,7 +35,7 @@ trade(Sym,A,"sell",S,P,M,O)     -> [trade,P,S].
 order(Sym,_,_,S,[],M,O)         -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
 order(Sym,"canceled",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
 order(Sym,_,"buy",S,P,M,O)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
-order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=ask}).
+order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
