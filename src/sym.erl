@@ -10,7 +10,14 @@ instance() -> #sym{}.
 post({Data},_) -> from_json(Data, instance()).
 
 f(T,[])          -> [];
-f(T,[A,"-0"])    -> io_lib:format("~s:[~p -0]~n",    [T,A]);
-f(T,[trade,P,S]) -> io_lib:format("~s:[~s ~s]~n",    [T,  trade:print_float(P),trade:print_float(S)]);
-f(T,[A,P,S])     -> io_lib:format("~s:[~p ~s ~s]~n", [T,A,trade:print_float(P),trade:print_float(S)]);
-f(T,X)           -> io_lib:format("~s:[~p]~n",       [T,X]).
+f(T,[A,"-0"])    -> io_lib:format("~s ~p -0~n",    [timestamp(),A]);
+f(T,[trade,P,S]) -> io_lib:format("~s ~s ~s~n",    [timestamp(),  trade:print_float(P),trade:print_float(S)]);
+f(T,[A,P,S])     -> io_lib:format("~s ~p ~s ~s~n", [timestamp(),A,trade:print_float(P),trade:print_float(S)]);
+f(T,X)           -> io_lib:format("~s ~p~n",       [timestamp(),X]).
+
+pad(I,X) -> string:left(integer_to_list(I),X,$0).
+
+timestamp() ->
+    {Ma,Sa,Micro} = os:timestamp(),
+    {_,{A,B,C}} = calendar:seconds_to_daystime(Ma*1000000 + Sa),
+    io_lib:format("~s:~s:~s.~s",[pad(A,2),pad(B,2),pad(C,2),pad(Micro div 1000,3)]).
