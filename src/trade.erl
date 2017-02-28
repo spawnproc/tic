@@ -14,21 +14,21 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID]) ->
     FileName    = lists:concat(["priv/",Venue,"/",Stream,"/",Y,"-",M,"-",D,"/",Sym]),
     Order = lists:flatten(sym:f(Timestamp,Venue:Stream(Sym,A,Side,normal(p(S)),normal(p(P)),Debug,OID))),
     case application:get_env(trade,log,hide) of
-         show -> io:format("~p:~p:~p:~s",[Venue,Sym,Side,Order]);
+         show -> io:format("~p:~p:~p:~s",[Venue,Sym,Side,Order,Debug]);
             _ -> skip end,
     file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
 
-log_modules() -> [ bitmex, gdax ].
+log_modules() -> [ bitmex, gdax, book, sym, trade, venue_sup ].
 init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues() ] } }.
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 precision()   -> 8.
-ws(Venue,URL) -> {Venue,{websocket_client,start_link,[URL,Venue,[]]},permanent,1000,worker,[websocket_client]}.
+ws(Venue,URL) -> {Venue,{venue_sup,start_link,[Venue,URL]},permanent,1000,worker,[venue_sup]}.
 dirs()        -> file:make_dir("priv"),
                  [ begin file:make_dir(lists:concat(["priv/",X])),
                    [ file:make_dir(lists:concat(["priv/",X,"/",Y]))
                    || Y <- [trade,order] ]
-                 end || X <- log_modules() ].
+                 end || X <- [bitmex, gdax] ].
 
 p(X) when is_integer(X) -> integer_to_list(X);
 p(X) when is_float(X)   -> float_to_list(X,[{decimals,8},compact]);

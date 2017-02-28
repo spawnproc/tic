@@ -7,42 +7,43 @@
 instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
 metainfo() ->
-    #schema { name = trading, tables = [
+    #schema { name = trading,  tables = [
      #table { name = order,    fields = record_info(fields, order) },
-     #table { name = 'btc_usd', fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'btc_eur', fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'btc_gpb', fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'eth_btc', fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'eth_usd', fields = record_info(fields, tick), keys=[id,price] }   ] }.
+     #table { name = 'bitmex_btc_usd' , fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'gdax_btc_usd',    fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'gdax_btc_eur',    fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'gdax_btc_gbp',    fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'gdax_eth_btc',    fields = record_info(fields, tick), keys=[id,price] },
+     #table { name = 'gdax_eth_usd',    fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
 add(#tick{sym=[]}) -> [];
 
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
-   case kvs:index(Sym,price,P) of
-        [{Sym,_,P,Id,XS,Sym,_}=X] ->
-              UID=kvs:next_id(Sym,1),
-              kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
-              kvs:put(setelement(#tick.size,X,XS+S)), [UID,P,abs(S),Side];
-        [] -> UID=kvs:next_id(Sym,1),
-              kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
-              kvs:put(setelement(1,
-                      setelement(#tick.size,
-                      setelement(#tick.id,
-                      setelement(#tick.uid,T,O),UID),S),Sym)), [UID,P,abs(S),Side] end.
+    case kvs:index(Sym,price,P) of
+         [{Sym,_,P,Id,XS,Sym,_}=X] ->
+               UID=kvs:next_id(Sym,1),
+               kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
+               kvs:put(setelement(#tick.size,X,XS+S)), [UID,P,abs(S),Side];
+         [] -> UID=kvs:next_id(Sym,1),
+               kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
+               kvs:put(setelement(1,
+                       setelement(#tick.size,
+                       setelement(#tick.id,
+                       setelement(#tick.uid,T,O),UID),S),Sym)), [UID,P,abs(S),Side] end.
 
 del(#tick{sym=[]}) -> [];
 
-del(#tick{price=[],id=O,size=S,sym=Sym}) ->
+del(#tick{price=[],id=O,size=S,sym=Sym}=Tick) ->
     case kvs:get(order,O) of
          {error,_} -> [];
          {ok,#order{uid=O,local_id=UID}} ->
-             case kvs:get(Sym,UID) of
-                  {ok,X} -> XS = element(#tick.size,X),
-                            kvs:put(setelement(#tick.size,X,XS+S)),
-                            kvs:delete(order,O), [UID];
-                       _ -> [UID] end end;
+               case kvs:get(Sym,UID) of
+                    {ok,X} -> XS = element(#tick.size,X),
+                              kvs:put(setelement(#tick.size,X,XS+S)),
+                              kvs:delete(order,O), [UID];
+                         _ -> [UID] end end;
 
-del(#tick{price=P,id=O,size=S,sym=Sym}) ->
+del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
     case kvs:index(Sym,price,P) of
          [] -> [];
          [{Sym,_,P,_,XS,Sym,Side}=X] ->

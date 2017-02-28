@@ -8,11 +8,11 @@
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
-name("BTC-USD") -> btc_usd;
-name("BTC-EUR") -> btc_eur;
-name("BTC-GBP") -> btc_gpb;
-name("ETH-BTC") -> eth_btc;
-name("ETH-USD") -> eth_usd;
+name("BTC-USD") -> gdax_btc_usd;
+name("BTC-EUR") -> gdax_btc_eur;
+name("BTC-GBP") -> gdax_btc_gbp;
+name("ETH-BTC") -> gdax_eth_btc;
+name("ETH-USD") -> gdax_eth_usd;
 name(X) -> [].
 
 route(#gdax{order_type="limit"},D) -> ok;
@@ -46,11 +46,11 @@ websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 
 state(State)   -> State + 1.
-print(Msg)     -> route(post(jsone:decode(Msg),#ctx{}),Msg).
+print(Msg)     -> try route(post(jsone:decode(Msg),#ctx{}),Msg) catch E:R -> io:format("~p\r",[Msg]) end.
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).
-subscribe()    -> websocket_client:cast(self(),
+subscribe()    -> catch websocket_client:cast(self(),
                   {text, jsone:encode([{type,subscribe},
-                                       {product_ids,['BTC-USD','BTC-EUR',
+                                       {product_ids,['BTC-USD',
                                                      'BTC-GBP','ETH-USD',
-                                                     'ETH-BTC','BTC-EUR','ETH-EUR' ]}])}).
+                                                     'ETH-BTC','BTC-EUR' ]}])}).

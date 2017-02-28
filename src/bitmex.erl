@@ -8,7 +8,7 @@
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
-name("XBTUSD")  -> btc_usd;
+name("XBTUSD")  -> bitmex_btc_usd;
 name(X)         -> [].
 
 route(#bitmex{table="orderBookL2",action=Ac,data=D}=B,M) ->
@@ -19,7 +19,7 @@ route(#bitmex{table="trade",action=Ac,data=D}=B,M) ->
 
 route(_,_) -> [].
 
-action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,trdMatchID=OID}=Packet,Debug) ->
+action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=Packet,Debug) ->
     trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID]).
 
 trade(Sym,A,"Buy",S,P,M,O)    -> [trade,P,trade:nn(S),bid];
