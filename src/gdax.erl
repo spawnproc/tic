@@ -32,10 +32,10 @@ route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID
 trade(Sym,A,"buy",S,P,M,O)      -> [trade,P,S];
 trade(Sym,A,"sell",S,P,M,O)     -> [trade,P,S].
 
-order(Sym,_,_,_,[],M,O)         -> book:del(#tick{sym=name(Sym),id=O});
-order(Sym,"canceled",_,_,P,M,O) -> book:del(#tick{sym=name(Sym),price=P,id=O});
-order(Sym,_,"buy",S,P,M,O)      -> book:add(#tick{sym=name(Sym),price=P,id=O,size=trade:nn(S),side=bid});
-order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),price=P,id=O,size=trade:nn(S),side=ask}).
+order(Sym,_,_,S,[],M,O)         -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
+order(Sym,"canceled",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
+order(Sym,_,"buy",S,P,M,O)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
+order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=ask}).
 
 init([], _)                             -> subscribe(), {ok, 1, 100}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.

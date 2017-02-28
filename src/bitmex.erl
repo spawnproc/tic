@@ -25,10 +25,10 @@ action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,trdMatch
 trade(Sym,A,"Buy",S,P,M,O)    -> [trade,P,S];
 trade(Sym,A,"Sell",S,P,M,O)   -> [trade,P,S].
 
-order(Sym,_,_,_,[],M,O)       -> book:del(#tick{sym=name(Sym),id=O});
-order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,price=P});
-order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),id=O,price=P,size=trade:nn(S),side=bid});
-order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),id=O,price=P,size=trade:nn(S),side=ask}).
+order(Sym,_,_,S,[],M,O)       -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
+order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
+order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
+order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=ask}).
 
 state(State)      -> State + 1.
 print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).

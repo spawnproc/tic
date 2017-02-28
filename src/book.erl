@@ -15,35 +15,39 @@ metainfo() ->
      #table { name = 'eth_btc', fields = record_info(fields, tick), keys=[id,price] },
      #table { name = 'eth_usd', fields = record_info(fields, tick), keys=[id,price] }   ] }.
 
+size(S,bid) -> S;
+size(S,ask) -> -S.
+
 add(#tick{sym=[]}) -> [];
 
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
    case kvs:index(Sym,price,P) of
         [{Sym,UID,P,Id,XS,Sym,_}=X] ->
-              kvs:put(setelement(#tick.size,X,XS+S)),
+              kvs:put(setelement(#tick.size,X,XS+size(S,Side))),
               kvs:put(#order{uid=O,local_id=UID,sym=Sym}), [UID,P,S,Side];
         [] -> UID=kvs:next_id(Sym,1),
               kvs:put(setelement(1,
                       setelement(#tick.size,
-                      setelement(#tick.uid,T,UID),S),Sym)), [UID,P,S,Side] end.
+                      setelement(#tick.uid,T,UID),size(S,Side)),Sym)), [UID,P,S,Side] end.
 
 del(#tick{sym=[]}) -> [];
 
-del(#tick{price=[],id=O,sym=Sym}) ->
+del(#tick{price=[],id=O,size=S,sym=Sym}) ->
    case kvs:get(order,O) of
         {error,_} -> [];
         {ok,#order{uid=O,local_id=UID}} ->
               case kvs:get(Sym,UID) of
-                   {ok,X} -> kvs:put(setelement(#tick.size,X,0)),
+                   {ok,X} -> XS = element(#tick.size,X),
+                             kvs:put(setelement(#tick.size,X,XS-S)),
                              kvs:delete(order,O), [UID];
                         _ -> [UID] end end;
 
-del(#tick{price=P,id=O,sym=Sym}) ->
+del(#tick{price=P,id=O,size=S,sym=Sym}) ->
    case kvs:index(Sym,price,P) of
         [] -> [];
         [{Sym,UID,P,Id,XS,Sym,_}=X] ->
-              kvs:delete(order,O),
-              kvs:put(setelement(#tick.size,X,0)), [UID] end.
+              kvs:put(setelement(#tick.size,X,XS-S)),
+              kvs:delete(order,O), [UID] end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
