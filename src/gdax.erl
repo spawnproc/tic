@@ -23,8 +23,8 @@ route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T
 route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
-route(#gdax{type="change",price=P,side=Side,new_size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
+route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    trade:trace(?MODULE,[order,A,Sym,S2-S1,P,Side,D,T,OID]);
 
 route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]).
