@@ -23,7 +23,7 @@ init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues()
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 precision()   -> 8.
-ws(Venue,URL) -> {Venue,{venue_sup,start_link,[Venue,URL]},permanent,1000,worker,[venue_sup]}.
+ws(Venue,URL) -> {Venue,{venue_sup,start_link,[Venue,URL]},permanent,1000,supervisor,[Venue]}.
 dirs()        -> file:make_dir("priv"),
                  [ begin file:make_dir(lists:concat(["priv/",X])),
                    [ file:make_dir(lists:concat(["priv/",X,"/",Y]))
