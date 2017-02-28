@@ -29,9 +29,15 @@ $ ./mad dep com pla && ./mad rep
 Text Log
 --------
 
-`10:40:60.871 +762 1207.95 0.01` &mdash; bid order
-`10:40:60.850 -184 0` &mdash empty price level, cancel order
-`10:40:60.871 -762 1207.95 0.01` &mdash; ask order
+Orders:
+
+`10:40:60.871 +762 1207.95 0.01` &mdash; bid order<br>
+`10:40:60.850 -184 0` &mdash; empty price level, cancel order<br>
+`10:40:60.871 -762 1207.95 0.01` &mdash; ask order<br>
+
+Trades:
+
+`10:53:40.238 1202.81 4913.0` &mdash; trade happened at price level
 
 ```
 $ tail priv/gdax/order/2017-2-28/BTC-USD
