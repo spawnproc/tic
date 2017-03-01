@@ -14,7 +14,7 @@ f(T,[A,P,S,ask])     -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,trade:prin
 f(T,[A,P,S,bid])     -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
 f(T,X)               -> io_lib:format("~s ~p~n",       [timestamp(),X]).
 
-pad(I,X)         -> string:left(integer_to_list(I),X,$0).
+pad(I,X)         -> string:right(integer_to_list(I),X,$0).
 instance()       -> #sym{}.
 post({Data},_)   -> from_json(Data, instance()).
 timestamp()      ->
