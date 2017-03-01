@@ -12,17 +12,17 @@ alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
 
 metainfo() ->
     #schema { name = trading,  tables = [
-     #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id]  },
-     #table { name = order,               fields = record_info(fields, order) },
-     #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = bitmex_dash_futute,  fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'gdax_btc_gbp',      fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'gdax_eth_btc',      fields = record_info(fields, tick), keys=[id,price] },
-     #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id,price] }   ] }.
+     #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],   copy_type=ram_copies },
+     #table { name = order,               fields = record_info(fields, order),                 copy_type=ram_copies },
+     #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = bitmex_dash_futute,  fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = 'gdax_btc_gbp',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = 'gdax_eth_btc',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
+     #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies }   ] }.
 
 add(#tick{sym=[]}) -> [];
 

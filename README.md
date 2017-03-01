@@ -15,7 +15,7 @@ Features
 * BitMEX, OKCoin, GDAX and other venues
 * Reconnecting on stream failures
 * Fast ETS storage as matching engine
-* 150 LOC
+* 250 LOC
 
 Launch
 ------
