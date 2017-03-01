@@ -34,8 +34,7 @@ add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
                [UID,P,abs(S),Side];
          [] -> kvs:put(setelement(1,
                        setelement(#tick.size,
-                       setelement(#tick.id,
-                       setelement(#tick.uid,T,O),UID),S),Sym)),
+                       setelement(#tick.uid,T,O),S),Sym)),
                [UID,P,abs(S),Side] end.
 
 del(#tick{sym=[]}) -> [];
