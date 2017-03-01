@@ -8,8 +8,11 @@
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
-name("XBTUSD")  -> bitmex_btc_usd;
-name(X)         -> [].
+name("XBTUSD")    -> bitmex_btc_usd_swap;
+name("COIN_BH17") -> bitmex_coin_future;
+name("DASH7D")    -> bitmex_dash_futute;
+name("ETH7D")     -> bitmex_eth_future;
+name(X)           -> [].
 
 route(#bitmex{table="orderBookL2",action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(order,B,Ac,X,M) end, [], [X||X<-D]);
