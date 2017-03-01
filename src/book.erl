@@ -6,13 +6,11 @@
 
 instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
-next(Sym) ->
-    case mnesia:transaction(fun() -> mnesia:first(io) end) of
-         {atomic,'$end_of_table'} -> kvs:next_id(Sym,1);
-                       {atomic,X} -> X end.
+free(UID)  -> kvs:info(?MODULE,"free: ~p~n",[UID]), kvs:put(#io{i=UID}).
+alloc(S) -> case ets:last(io) of
+              '$end_of_table' -> kvs:next_id(S,1);
+                          UID -> kvs:info(?MODULE,"alloc: ~p~n",[UID]), kvs:delete(io,UID), UID end.
 
-clear(0,O) -> kvs:delete(io,O);
-clear(S,O) -> skip.
 
 metainfo() ->
     #schema { name = trading,  tables = [
@@ -30,10 +28,10 @@ add(#tick{sym=[]}) -> [];
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
     case kvs:index(Sym,price,P) of
          [{Sym,_,P,Id,XS,Sym,_}=X] ->
-               UID=book:next(Sym),
+               UID=book:alloc(Sym),
                kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
                kvs:put(setelement(#tick.size,X,XS+S)), [UID,P,abs(S),Side];
-         [] -> UID=book:next(Sym),
+         [] -> UID=book:alloc(Sym),
                kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
                kvs:put(setelement(1,
                        setelement(#tick.size,
@@ -49,9 +47,9 @@ del(#tick{price=[],id=O,size=S,sym=Sym}=Tick) ->
                case kvs:get(Sym,UID) of
                     {ok,X} -> XS = element(#tick.size,X),
                               kvs:put(setelement(#tick.size,X,XS+S)),
-                              clear(XS+S,O),
+                              book:free(UID),
                               kvs:delete(order,O), [UID];
-                         _ -> [UID] end end;
+                         _ -> book:free(UID), [UID] end end;
 
 del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
     case kvs:index(Sym,price,P) of
@@ -61,7 +59,7 @@ del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
                   {error,_} -> [];
                   {ok,#order{uid=O,local_id=UID}} ->
                        kvs:put(setelement(#tick.size,X,XS+S)),
-                       clear(XS+S,O),
+                       book:free(UID),
                        kvs:delete(order,O), [UID] end end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
