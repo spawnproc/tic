@@ -31,7 +31,7 @@ order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn
 order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
 
 state(State)      -> State + 1.
-print(Msg)        -> route(post(jsone:decode(Msg),#ctx{}),Msg).
+print(Msg)        -> route(post(jsone:decode(Msg),#io{}),Msg).
 instance()        -> #bitmex{}.
 post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
                      Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- Bitmex#bitmex.data]}.

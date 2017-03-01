@@ -27,7 +27,7 @@ route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,pro
     io:format("change: ~p\r",[{S1,S2}]),
     trade:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID]);
 
-route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID}=Tick,D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]).
 
 trade(Sym,A,"buy",S,P,M,O)      -> [trade,P,trade:nn(S),bid];
@@ -46,10 +46,10 @@ websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 
 state(State)   -> State + 1.
-print(Msg)     -> try route(post(jsone:decode(Msg),#ctx{}),Msg) catch E:R -> io:format("~p\r",[Msg]) end.
+print(Msg)     -> route(post(jsone:decode(Msg),#io{}),Msg).
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).
-subscribe()    -> catch websocket_client:cast(self(),
+subscribe()    -> websocket_client:cast(self(),
                   {text, jsone:encode([{type,subscribe},
                                        {product_ids,['BTC-USD',
                                                      'BTC-GBP','ETH-USD',
