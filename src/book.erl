@@ -25,43 +25,31 @@ metainfo() ->
      #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies }   ] }.
 
 add(#tick{sym=[]}) -> [];
-
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
+    UID = book:alloc(Sym),
+    kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P}),
     case kvs:index(Sym,price,P) of
          [{Sym,_,P,Id,XS,Sym,_}=X] ->
-               UID=book:alloc(Sym),
-               kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
-               kvs:put(setelement(#tick.size,X,XS+S)), [UID,P,abs(S),Side];
-         [] -> UID=book:alloc(Sym),
-               kvs:put(#order{uid=O,local_id=UID,sym=Sym}),
-               kvs:put(setelement(1,
+               kvs:put(setelement(#tick.size,X,XS+S)),
+               [UID,P,abs(S),Side];
+         [] -> kvs:put(setelement(1,
                        setelement(#tick.size,
                        setelement(#tick.id,
-                       setelement(#tick.uid,T,O),UID),S),Sym)), [UID,P,abs(S),Side] end.
+                       setelement(#tick.uid,T,O),UID),S),Sym)),
+               [UID,P,abs(S),Side] end.
 
 del(#tick{sym=[]}) -> [];
-
-del(#tick{price=[],id=O,size=S,sym=Sym}=Tick) ->
+del(#tick{id=O,size=S,sym=Sym}=Tick) ->
     case kvs:get(order,O) of
          {error,_} -> [];
-         {ok,#order{uid=O,local_id=UID}} ->
+         {ok,#order{uid=O,local_id=UID,price=Price}} ->
                book:free({Sym,UID}),
-               case kvs:get(Sym,UID) of
-                    {ok,X} -> XS = element(#tick.size,X),
-                              kvs:put(setelement(#tick.size,X,XS+S)),
-                              kvs:delete(order,O),  [UID];
-                         _ -> [UID] end end;
-
-del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
-    case kvs:index(Sym,price,P) of
-         [] -> [];
-         [{Sym,_,P,_,XS,Sym,Side}=X] ->
-             case kvs:get(order,O) of
-                  {error,_} -> [];
-                  {ok,#order{uid=O,local_id=UID}} ->
-                       kvs:put(setelement(#tick.size,X,XS+S)),
-                       book:free({Sym,UID}),
-                       kvs:delete(order,O), [UID] end end.
+               kvs:delete(order,O),
+               case kvs:index(Sym,price,Price) of
+                    [X] -> kvs:put(setelement(#tick.size,X,
+                                   element(#tick.size,X)+S)),
+                           [UID];
+                     [] -> [UID] end end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
