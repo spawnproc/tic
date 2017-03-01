@@ -37,7 +37,7 @@ Orders:
 
 Trades:
 
-`13:37:37.707 1188.48 -472.0` &mdash; ask trade happened at price level
+`13:37:37.707 1188.48 -472.0` &mdash; ask trade happened at price level<br>
 `13:37:38.611 1188.43 593.0` &mdash; bid trade happened at price level
 
 ```
