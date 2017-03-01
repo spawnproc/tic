@@ -6,7 +6,7 @@
 
 instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
-free({Sym,UID}) -> kvs:put(#io{id=UID,sym=Sym}).
+free({Sym,UID}) -> kvs:put(#io{uid=UID,id=UID,sym=Sym}).
 alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
                        [#io{uid=Key,sym=Sym,id=UID}|_] -> kvs:delete(io,Key), UID end.
 
@@ -45,11 +45,11 @@ del(#tick{price=[],id=O,size=S,sym=Sym}=Tick) ->
     case kvs:get(order,O) of
          {error,_} -> [];
          {ok,#order{uid=O,local_id=UID}} ->
+               book:free({Sym,UID}),
                case kvs:get(Sym,UID) of
                     {ok,X} -> XS = element(#tick.size,X),
                               kvs:put(setelement(#tick.size,X,XS+S)),
-                              book:free({Sym,UID}),
-                              kvs:delete(order,O), [UID];
+                              kvs:delete(order,O),  [UID];
                          _ -> [UID] end end;
 
 del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
