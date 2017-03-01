@@ -1,5 +1,5 @@
 
--record(io,     { i=[], o=[] }).
+-record(io,     { uid=[], id=[], sym=[] }).
 -record(order,  { uid=[], local_id=[], sym=[] }).
 -record(tick,   { uid=[], price=[], id=[], size=[], sym=[], side=[] }).
 

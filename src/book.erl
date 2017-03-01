@@ -6,15 +6,13 @@
 
 instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
-free(UID)  -> kvs:info([],"free: ~p~n",[UID]), kvs:put(#io{i=UID}).
-alloc(S) -> case ets:last(io) of
-              '$end_of_table' -> kvs:next_id(S,1);
-                          UID -> kvs:info([],"alloc: ~p~n",[UID]), kvs:delete(io,UID), UID end.
-
+free({Sym,UID}) -> kvs:put(#io{id=UID,sym=Sym}).
+alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
+                       [#io{uid=Key,sym=Sym,id=UID}|_] -> kvs:delete(io,Key), UID end.
 
 metainfo() ->
     #schema { name = trading,  tables = [
-     #table { name = io,                fields = record_info(fields, io)  },
+     #table { name = io,                fields = record_info(fields, io),   keys=[sym,id]  },
      #table { name = order,             fields = record_info(fields, order) },
      #table { name = 'bitmex_btc_usd' , fields = record_info(fields, tick), keys=[id,price] },
      #table { name = 'gdax_btc_usd',    fields = record_info(fields, tick), keys=[id,price] },
@@ -47,9 +45,9 @@ del(#tick{price=[],id=O,size=S,sym=Sym}=Tick) ->
                case kvs:get(Sym,UID) of
                     {ok,X} -> XS = element(#tick.size,X),
                               kvs:put(setelement(#tick.size,X,XS+S)),
-                              book:free(UID),
+                              book:free({Sym,UID}),
                               kvs:delete(order,O), [UID];
-                         _ -> book:free(UID), [UID] end end;
+                         _ -> [UID] end end;
 
 del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
     case kvs:index(Sym,price,P) of
@@ -59,7 +57,7 @@ del(#tick{price=P,id=O,size=S,sym=Sym}=Tick) ->
                   {error,_} -> [];
                   {ok,#order{uid=O,local_id=UID}} ->
                        kvs:put(setelement(#tick.size,X,XS+S)),
-                       book:free(UID),
+                       book:free({Sym,UID}),
                        kvs:delete(order,O), [UID] end end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
