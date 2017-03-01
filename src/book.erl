@@ -6,10 +6,10 @@
 
 instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 
-free(UID)  -> kvs:info(?MODULE,"free: ~p~n",[UID]), kvs:put(#io{i=UID}).
+free(UID)  -> kvs:info([],"free: ~p~n",[UID]), kvs:put(#io{i=UID}).
 alloc(S) -> case ets:last(io) of
               '$end_of_table' -> kvs:next_id(S,1);
-                          UID -> kvs:info(?MODULE,"alloc: ~p~n",[UID]), kvs:delete(io,UID), UID end.
+                          UID -> kvs:info([],"alloc: ~p~n",[UID]), kvs:delete(io,UID), UID end.
 
 
 metainfo() ->
