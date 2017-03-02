@@ -20,7 +20,7 @@ route(#bitmex{table="orderBookL2",action=Ac,data=D}=B,M) ->
 route(#bitmex{table="trade",action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(trade,B,Ac,X,M) end, [], [X||X<-D]);
 
-route(_,_) -> [].
+route(_,M) -> kvs:info(?MODULE,"~p",[M]), [].
 
 action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=Packet,Debug) ->
     trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID]).
@@ -33,16 +33,15 @@ order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn
 order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
 order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
 
-state(State)      -> State + 1.
+state({S,P})      -> {S+1,P}.
 print(Msg)        -> route(post(jsone:decode(Msg),#io{}),Msg).
 instance()        -> #bitmex{}.
 post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
                      Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- Bitmex#bitmex.data]}.
 
-init([], _)                               -> {ok, 1, 100}.
+init([P], _)                              -> {ok, {1,P}}.
 websocket_info(start, _, State)           -> {reply, <<>>, State}.
-websocket_terminate(_, _, _)              -> kvs:info(?MODULE,"terminated",[]), ok.
+websocket_terminate(_, _, {_,P})          -> kvs:info(?MODULE,"terminated ~p",[P]), ok.
 websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}.
-

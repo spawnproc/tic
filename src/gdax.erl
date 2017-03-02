@@ -24,11 +24,14 @@ route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=S
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
 route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    io:format("change: ~p\r",[{S1,S2}]),
-    trade:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID]);
+    Normal = trade:normal(trade:p(trade:nn(S2)-trade:nn(S1))),
+    io:format("change: ~p\r",[Normal]),
+    trade:trace(?MODULE,[order,A,Sym,Normal,P,Side,D,T,OID]);
 
-route(#gdax{size=S,price=P,side=Side,reason=A,product_id=Sym,time=T,order_id=OID}=Tick,D) ->
-    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]).
+route(#gdax{type="done",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
+    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
+
+route(_,D) -> kvs:info(?MODULE,"~p",[D]), [].
 
 trade(Sym,A,"buy",S,P,M,O)      -> [trade,P,trade:nn(S),bid];
 trade(Sym,A,"sell",S,P,M,O)     -> [trade,P,trade:nn(S),ask].
@@ -38,14 +41,14 @@ order(Sym,"canceled",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:
 order(Sym,_,"buy",S,P,M,O)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
 order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
 
-init([], _)                             -> subscribe(), {ok, 1, 100}.
+init([Pid], _)                          -> subscribe(), {ok, {100,Pid}}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
-websocket_terminate(_, _, _)            -> kvs:info(?MODULE,"terminated",[]), ok.
+websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]), ok.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 
-state(State)   -> State + 1.
+state({S,P})   -> {S+1,P}.
 print(Msg)     -> route(post(jsone:decode(Msg),#io{}),Msg).
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).

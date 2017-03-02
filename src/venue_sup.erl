@@ -13,13 +13,12 @@ handle_info({timer,connect}, State=#state{endpoint=URL,venue=Venue,timer=Timer})
     kvs:info(?MODULE,"Trying to connect: ~p~n",[State]),
     T = case Timer of
                 [] -> [];
-                 _ -> try case websocket_client:start_link(URL, Venue, []) of
+                 _ -> try case websocket_client:start_link(URL, Venue, [self()]) of
                                {ok,_} -> [];
                                {error,_} -> timer_restart({0,0,5},Timer) end
                   catch E:R -> timer_restart({0,0,5},Timer) end end,
     {noreply,State#state{timer=T}};
 
-handle_info({'EXIT', Pid,_}, #state{} = State) -> {noreply, State};
 handle_info(_Info, State) -> {noreply, State}.
 start_link(Venue,URL) -> gen_server:start_link(?MODULE, [Venue,URL], []).
 handle_call(Request,_,Proc) -> {reply,ok,Proc}.
