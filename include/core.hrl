@@ -1,6 +1,6 @@
 
 -record(io,     { uid=[], id=[], sym=[] }).
--record(order,  { uid=[], local_id=[], sym=[], price=[] }).
+-record(order,  { uid=[], local_id=[], sym=[], price=[], seq=[] }).
 -record(tick,   { uid=[], price=[], id=[], size=[], sym=[], side=[] }).
 -record(shot,   { sequence=[], bids=[], asks=[] }).
 

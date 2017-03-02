@@ -24,7 +24,7 @@ route(#bitmex{table="orderBookL2",action=Ac,data=D}=B,M) ->
 route(#bitmex{table="trade",action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(trade,B,Ac,X,M) end, [], [X||X<-D]);
 
-route(_,M) -> kvs:info(?MODULE,"~p",[M]), [].
+route(_,M) -> kvs:info(?MODULE,"~p~n",[M]), [].
 
 action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=Packet,Debug) ->
     trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID]).
@@ -48,5 +48,5 @@ websocket_info(start, _, State)           -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}.
-websocket_terminate(_, _, {_,P})          -> kvs:info(?MODULE,"terminated ~p",[P]),
+websocket_terminate(Msg, _, {_,P})        -> kvs:info(?MODULE,"~p terminated. notify ~p~n",[Msg,P]),
                                              erlang:send_after(100,P,{timer,connect}), ok.

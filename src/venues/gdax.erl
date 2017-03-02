@@ -18,7 +18,6 @@ name("ETH-BTC") -> gdax_eth_btc;
 name("ETH-USD") -> gdax_eth_usd;
 name(X)         -> [].
 
-
 route(#gdax{order_type="limit"},D) ->
     [];
 
@@ -39,7 +38,7 @@ route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,pro
 route(#gdax{type="done",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
-route(_,D) -> kvs:info(?MODULE,"~p",[D]), [].
+route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].
 
 trade(Sym,A,"buy",S,P,M,O)      -> [trade,P,trade:nn(S),bid];
 trade(Sym,A,"sell",S,P,M,O)     -> [trade,P,trade:nn(S),ask].
@@ -54,7 +53,7 @@ websocket_info(start, _, State)         -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
-websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]),
+websocket_terminate(Msg, _, {_,P})      -> kvs:info(?MODULE,"terminated ~p. notify ~p~n",[Msg,P]),
                                            erlang:send_after(100,P,{timer,connect}), ok.
 
 state({S,P})   -> {S+1,P}.
