@@ -8,7 +8,8 @@
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
-snapshot() -> shot:get().
+snapshot(S)     -> shot:get(S).
+subscription()  -> ["BTC-USD", "BTC-EUR", "BTC-GBP", "ETH-BTC", "ETH-USD"].
 
 name("BTC-USD") -> gdax_btc_usd;
 name("BTC-EUR") -> gdax_btc_eur;
@@ -16,6 +17,7 @@ name("BTC-GBP") -> gdax_btc_gbp;
 name("ETH-BTC") -> gdax_eth_btc;
 name("ETH-USD") -> gdax_eth_usd;
 name(X)         -> [].
+
 
 route(#gdax{order_type="limit"},D) ->
     [];
@@ -60,7 +62,4 @@ print(Msg)     -> route(post(jsone:decode(Msg),#io{}),Msg).
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).
 subscribe()    -> websocket_client:cast(self(),
-                  {text, jsone:encode([{type,subscribe},
-                                       {product_ids,['BTC-USD',
-                                                     'BTC-GBP','ETH-USD',
-                                                     'ETH-BTC','BTC-EUR' ]}])}).
+                  {text, jsone:encode([{type,subscribe},{product_ids,[list_to_atom(X)||X<-subscription()]}])}).

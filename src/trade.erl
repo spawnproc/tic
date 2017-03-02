@@ -38,7 +38,7 @@ n([Z,Y])      -> lists:concat([Z,Y,lists:duplicate(precision() - length(Y),"0")]
 normal(Price) -> lists:flatten(c(string:tokens(Price,"."))).
 
 nn([]) -> 0;
-nn(X)  -> list_to_integer(X).
+nn(X)  -> try list_to_integer(X) catch _:_ -> list_to_float(X) end.
 c([])  -> [];
 c([X]) -> n([X,[]]);
 c(X)   -> n(X).

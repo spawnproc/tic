@@ -6,9 +6,9 @@
 -export([post/1]).
 -rest_record(shot).
 
-get() ->
+get(Tick) ->
     ret(httpc:request(get,
-        {"https://api.gdax.com/products/BTC-USD/book?level=3",
+        {lists:concat(["https://api.gdax.com/products/",Tick,"/book?level=3"]),
         [{"User-Agent","ticker"}]},[],[])).
 
 post({D}) -> from_json(D,#shot{}).
