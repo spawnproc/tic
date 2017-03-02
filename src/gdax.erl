@@ -13,9 +13,13 @@ name("BTC-EUR") -> gdax_btc_eur;
 name("BTC-GBP") -> gdax_btc_gbp;
 name("ETH-BTC") -> gdax_eth_btc;
 name("ETH-USD") -> gdax_eth_usd;
-name(X) -> [].
+name(X)         -> [].
 
-route(#gdax{order_type="limit"},D) -> ok;
+route(#gdax{order_type="limit"},D) ->
+    [];
+
+route(#gdax{order_type="market"},D) ->
+    [];
 
 route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
     trade:trace(?MODULE,[trade,A,Sym,S,P,Side,D,T,OID]);
@@ -41,7 +45,7 @@ order(Sym,"canceled",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:
 order(Sym,_,"buy",S,P,M,O)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
 order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
 
-init([Pid], _)                          -> subscribe(), {ok, {100,Pid}}.
+init([P], _)                            -> subscribe(), {ok, {1,P}}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
 websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]),  ok.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
