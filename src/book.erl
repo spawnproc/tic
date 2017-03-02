@@ -4,7 +4,7 @@
 -include_lib("kvs/include/kvs.hrl").
 -compile(export_all).
 
-backend()       -> disc_copies.
+backend()       -> ram_copies.
 instruments()   -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 free({Sym,UID}) -> kvs:put(#io{uid=UID,id=UID,sym=Sym}).
 alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
