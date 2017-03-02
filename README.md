@@ -1,6 +1,8 @@
 Crypto Liquidity Integrator
 ===========================
 
+[![Build Status](https://travis-ci.org/spawnproc/ticker.svg?branch=master)](https://travis-ci.org/spawnproc/ticker)
+
 Origins
 -------
 
