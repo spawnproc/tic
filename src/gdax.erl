@@ -43,7 +43,7 @@ order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade
 
 init([Pid], _)                          -> subscribe(), {ok, {100,Pid}}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
-websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]), ok.
+websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]),  ok.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
