@@ -8,7 +8,7 @@
 -compile({parse_transform, rest}).
 -rest_record(bitmex).
 
-snapshot(_)        -> #shot{}.
+snapshot(_)       -> #shot{}.
 
 name("XBTUSD")    -> bitmex_btc_usd_swap;
 name("COIN_BH17") -> bitmex_coin_future;

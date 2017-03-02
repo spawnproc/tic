@@ -5,8 +5,8 @@
 -record(state, {venue,endpoint,timer=[]}).
 -export(?GEN_SERVER).
 
-timer({X,Y,Z},Timer) when Z > 60 -> timer_restart({X,Y,60},Timer);
-timer({X,Y,Z},Timer)             -> timer_restart({X,Y,Z*2},Timer).
+timer({X,Y,Z},Timer) when Z >= 60 -> timer_restart({X,Y,60},Timer);
+timer({X,Y,Z},Timer)              -> timer_restart({X,Y,Z*2},Timer).
 
 timer_restart({X,Y,Z},Timer) ->
     erlang:cancel_timer(Timer),
