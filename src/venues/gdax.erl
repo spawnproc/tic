@@ -47,7 +47,7 @@ order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade
 
 init([P], _)                            -> subscribe(), {ok, {1,P}}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
-websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]),  ok.
+websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]), erlang:send_after(100,P,{timer,connect}), ok.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
