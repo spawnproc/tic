@@ -9,7 +9,7 @@
 -rest_record(gdax).
 
 snapshot(S)     -> shot:get(S).
-subscription()  -> ["BTC-USD", "BTC-EUR", "BTC-GBP", "ETH-BTC", "ETH-USD"].
+subscription()  -> ['BTC-USD', 'BTC-EUR', 'BTC-GBP', 'ETH-BTC', 'ETH-USD'].
 
 name("BTC-USD") -> gdax_btc_usd;
 name("BTC-EUR") -> gdax_btc_eur;
@@ -61,4 +61,5 @@ print(Msg)     -> route(post(jsone:decode(Msg),#io{}),Msg).
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).
 subscribe()    -> websocket_client:cast(self(),
-                  {text, jsone:encode([{type,subscribe},{product_ids,[list_to_atom(X)||X<-subscription()]}])}).
+                  {text, jsone:encode([{type,subscribe},{product_ids,subscription()}])}),
+                  websocket_client:cast(self(),{text, jsone:encode([{type,heartbeat},{on,false}])}).
