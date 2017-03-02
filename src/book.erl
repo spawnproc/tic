@@ -4,25 +4,25 @@
 -include_lib("kvs/include/kvs.hrl").
 -compile(export_all).
 
-instruments() -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
-
+backend()       -> disc_copies.
+instruments()   -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 free({Sym,UID}) -> kvs:put(#io{uid=UID,id=UID,sym=Sym}).
 alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
                        [#io{uid=Key,sym=Sym,id=UID}|_] -> kvs:delete(io,Key), UID end.
 
 metainfo() ->
     #schema { name = trading,  tables = [
-     #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],   copy_type=ram_copies },
-     #table { name = order,               fields = record_info(fields, order),                 copy_type=ram_copies },
-     #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = bitmex_dash_futute,  fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = 'gdax_btc_gbp',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = 'gdax_eth_btc',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies },
-     #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=ram_copies }   ] }.
+     #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],   copy_type=backend() },
+     #table { name = order,               fields = record_info(fields, order),                 copy_type=backend() },
+     #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = bitmex_dash_futute,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = 'gdax_btc_gbp',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = 'gdax_eth_btc',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() }   ] }.
 
 add(#tick{sym=[]}) -> [];
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
@@ -76,4 +76,7 @@ print(Book) ->
               string:left(trade:print_float(integer_to_list(S)),SW,$ ) ]))]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
-    io:format("Total: ~s~n",[trade:print_float(trade:p(Total))]).
+    io:format("Total: ~s~n",[trade:print_float(trade:p(Total))]),
+
+    {Depth,Total}.
+
