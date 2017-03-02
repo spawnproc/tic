@@ -12,7 +12,7 @@ timer_restart({X,Y,Z},Timer) ->
 handle_info({timer,connect}, State=#state{endpoint=URL,venue=Venue,timer=Timer}) ->
     kvs:info(?MODULE,"~p~n",[State]),
     T = try case websocket_client:start_link(URL, Venue, [self()]) of
-                 {ok,_} -> [];
+                 {ok,_} -> kvs:info(?MODULE,"~p snapshot size: ~p~n",[Venue,length((Venue:snapshot())#shot.bids)]), [];
                  {error,_} -> timer_restart({0,0,5},Timer) end
     catch E:R -> timer_restart({0,0,5},Timer) end,
     {noreply,State#state{timer=T}};

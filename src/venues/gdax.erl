@@ -8,6 +8,8 @@
 -compile({parse_transform, rest}).
 -rest_record(gdax).
 
+snapshot() -> shot:get().
+
 name("BTC-USD") -> gdax_btc_usd;
 name("BTC-EUR") -> gdax_btc_eur;
 name("BTC-GBP") -> gdax_btc_gbp;
@@ -47,10 +49,11 @@ order(Sym,_,"sell",S,P,M,O)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade
 
 init([P], _)                            -> subscribe(), {ok, {1,P}}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
-websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]), erlang:send_after(100,P,{timer,connect}), ok.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
+websocket_terminate(_, _, {_,P})        -> kvs:info(?MODULE,"terminated ~p",[P]),
+                                           erlang:send_after(100,P,{timer,connect}), ok.
 
 state({S,P})   -> {S+1,P}.
 print(Msg)     -> route(post(jsone:decode(Msg),#io{}),Msg).
