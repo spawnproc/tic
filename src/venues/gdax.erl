@@ -56,7 +56,7 @@ order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
 order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
 order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
-init([P], _)                            -> subscribe(), {ok, {1,P}}.
+init([P], _)                            -> subscribe(), heart_off(), {ok, {1,P}}.
 websocket_info(left, _, State)          -> kvs:info(?MODULE,"sync~n",[]), {ok, State};
 websocket_info(right, _, State)         -> kvs:info(?MODULE,"check~n",[]), {ok, State};
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
@@ -70,6 +70,5 @@ state({S,P})   -> {S+1,P}.
 print(Msg)     -> try route(post(jsone:decode(Msg),#io{}),Msg) catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg,erlang:get_stacktrace()}]) end.
 instance()     -> #gdax{}.
 post({Data},_) -> from_json(Data, instance()).
-subscribe()    -> websocket_client:cast(self(),
-                  {text, jsone:encode([{type,subscribe},{product_ids,subscription()}])}),
-                  websocket_client:cast(self(),{text, jsone:encode([{type,heartbeat},{on,false}])}).
+subscribe()    -> websocket_client:cast(self(),{text,jsone:encode([{type,subscribe},{product_ids,subscription()}])}).
+heart_off()    -> websocket_client:cast(self(),{text,jsone:encode([{type,heartbeat},{on,false}])}).
