@@ -16,6 +16,7 @@ name('BTC-EUR') -> gdax_btc_eur;
 name('BTC-GBP') -> gdax_btc_gbp;
 name('ETH-BTC') -> gdax_eth_btc;
 name('ETH-USD') -> gdax_eth_usd;
+name(X) when is_list(X) -> name(list_to_existing_atom(X));
 name(X)         -> [].
 
 route(#gdax{order_type="limit"},D) ->
@@ -48,11 +49,12 @@ trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,trade:nn(S),ask];
 trade(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"Warning. Reason is empty: ~p~n",[{Sym,A,R,S,P,O,Q}]),
                                      [].
 
-order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
-order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O});
+%order(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"~p~n",[M]);
+order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
+order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
 order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
     kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p ~p~n",[M,R]),
-                                     book:del(#tick{sym=name(Sym),id=O});
+                                     book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
 order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
 order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
