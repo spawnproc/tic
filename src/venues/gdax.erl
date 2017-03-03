@@ -31,8 +31,8 @@ route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=S
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID]);
 
 route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
-    Normal = trade:normal(trade:p(trade:nn(S2)-trade:nn(S1))),
-    io:format("change: ~p\r",[Normal]),
+    Normal = trade:normal(trade:p(abs(trade:nn(S2)-trade:nn(S1)))),
+    io:format("change: ~p ~p ~p\r",[Normal,Side,trade:nn(S2)-trade:nn(S1)]),
     trade:trace(?MODULE,[order,A,Sym,Normal,P,Side,D,T,OID]);
 
 route(#gdax{type="done",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID},D) ->
@@ -54,7 +54,7 @@ websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)     -> print(Msg), {noreply, State}.
 websocket_terminate(Msg, _, {_,P})      -> kvs:info(?MODULE,"terminated ~p. notify ~p~n",[Msg,P]),
-                                           erlang:send_after(100,P,{timer,connect}), ok.
+                                           erlang:send_after(100,P,{timer,connect,5}), ok.
 
 state({S,P})   -> {S+1,P}.
 print(Msg)     -> route(post(jsone:decode(Msg),#io{}),Msg).

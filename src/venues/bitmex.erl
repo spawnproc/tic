@@ -49,4 +49,4 @@ websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}.
 websocket_terminate(Msg, _, {_,P})        -> kvs:info(?MODULE,"~p terminated. notify ~p~n",[Msg,P]),
-                                             erlang:send_after(100,P,{timer,connect}), ok.
+                                             erlang:send_after(100,P,{timer,connect,5}), ok.
