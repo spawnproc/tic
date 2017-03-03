@@ -21,6 +21,6 @@ cut() -> cut(gdax,'BTC-USD').
 cut(Venue,Topic) -> #shot{sequence=Seq} = shot:get(Topic), Name = Venue:name(Topic),
             {A,B} = lists:partition(fun(X) -> X#order.sn < Seq end,
                       lists:sort(fun(L,R) -> L#order.sn < R#order.sn end,
-                      element(1,lists:partition(fun(#order{sym=Name}) -> true; (_) -> false end,
-                      kvs:all(order))))),
-            {length(A),length(B),A}.
+                      lists:filter(fun(#order{sym=Name}) -> true; (_) -> false end,
+                      kvs:all(order)))),
+            {{A,length(A)},{B,length(B)}}.

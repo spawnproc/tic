@@ -32,10 +32,13 @@ action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=
 trade(Sym,A,"Buy",S,P,M,O,Q)    -> [trade,P,trade:nn(S),bid];
 trade(Sym,A,"Sell",S,P,M,O,Q)   -> [trade,P,trade:nn(S),ask].
 
-order(Sym,_,_,S,[],M,O,Q)       -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
-order(Sym,"delete",_,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
-order(Sym,_,"Buy",S,P,M,O,Q)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
-order(Sym,_,"Sell",S,P,M,O,Q)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
+order(Sym,"delete",_,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
+order(Sym,"update",_,S,P,M,O,Q) -> []; % TODO
+order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
+    kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p~n",[M]),
+                                   book:del(#tick{sym=name(Sym),id=O});
+order(Sym,A,"Buy",S,P,M,O,Q)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
+order(Sym,A,"Sell",S,P,M,O,Q)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
 state({S,P})      -> {S+1,P}.
 print(Msg)        -> try route(post(jsone:decode(Msg),#io{}),Msg) catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg}]) end.

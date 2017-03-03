@@ -24,18 +24,21 @@ route(#gdax{order_type="limit"},D) ->
 route(#gdax{order_type="market"},D) ->
     [];
 
-route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq},D) ->
+route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
     trade:trace(?MODULE,[trade,A,Sym,S,P,Side,D,T,OID,Seq]);
 
-route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq},D) ->
+route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
 
-route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq},D) ->
-    Normal = trade:print_float(trade:normal(trade:p(abs(trade:nn(S2)-trade:nn(S1))))),
-    io:format("change: ~p ~p ~p\r",[Normal,Side,trade:nn(S2)-trade:nn(S1)]),
+route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
+    N = trade:print_float(trade:normal(trade:p(abs(trade:nn(S2)-trade:nn(S1))))),
+    Normal = case Side of
+                  bid -> N;
+                  ask -> -N end,
+    kvs:info(?MODULE,"change: ~p ~p ~p\r",[Normal,Side,trade:nn(S2)-trade:nn(S1)]),
     trade:trace(?MODULE,[order,A,Sym,Normal,P,Side,D,T,OID,Seq]);
 
-route(#gdax{type="done",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq},D) ->
+route(#gdax{type="done",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
 
 route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].
@@ -43,10 +46,13 @@ route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].
 trade(Sym,A,"buy",S,P,M,O,Q)      -> [trade,P,trade:nn(S),bid];
 trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,trade:nn(S),ask].
 
-order(Sym,_,_,S,[],M,O,Q)         -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
-order(Sym,"canceled",_,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
-order(Sym,_,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
-order(Sym,_,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
+order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
+order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O});
+order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
+    kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p ~p~n",[M,R]),
+                                     book:del(#tick{sym=name(Sym),id=O});
+order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
+order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
 init([P], _)                            -> subscribe(), {ok, {1,P}}.
 websocket_info(start, _, State)         -> {reply, <<>>, State}.

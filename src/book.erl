@@ -27,7 +27,7 @@ metainfo() ->
 add(#tick{sym=[]}) -> [];
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side,sn=Q}=T) ->
     UID = book:alloc(Sym),
-    kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P,sn=Q,size=S}),
+    kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P,sn=Q,size=S,side=Side}),
     case kvs:index(Sym,price,P) of
          [{Sym,_,P,Id,XS,Sym,_,_}=X] ->
                kvs:put(setelement(#tick.size,X,XS+S)),
@@ -57,7 +57,7 @@ print(Book) ->
     F      = fun(X, Y) -> trade:nn(element(#tick.price,X)) < trade:nn(element(#tick.price,Y)) end,
     Sorted = lists:sort(F, kvs:all(Book)),
 
-    {PW,SW} = lists:foldr(fun({_,_,P,_,S,_,_},{X,Y}) ->
+    {PW,SW} = lists:foldr(fun({_,_,P,_,S,_,_,_},{X,Y}) ->
                  { erlang:max(X,length(trade:print_float(P))),
                    erlang:max(Y,length(trade:print_float(integer_to_list(S)))) } end, {0,0}, Sorted),
 
@@ -66,8 +66,8 @@ print(Book) ->
 
     io:format("~s ~s~n", [lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
-    {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_},A) -> A;
-                                    ({_,_,P,_,S,_,_},{D,Acc}) ->
+    {Depth,Total}  = lists:foldr(fun({_,_,_,_,0,_,_,_},A) -> A;
+                                    ({_,_,P,_,S,_,_,_},{D,Acc}) ->
 
     Side = case S < 0 of true -> ask; _ -> bid end,
 
