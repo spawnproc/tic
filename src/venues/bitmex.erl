@@ -27,18 +27,18 @@ route(#bitmex{table="trade",action=Ac,data=D}=B,M) ->
 route(_,M) -> kvs:info(?MODULE,"~p~n",[M]), [].
 
 action(Stream,T,A,#sym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=Packet,Debug) ->
-    trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID]).
+    trade:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID,[]]).
 
-trade(Sym,A,"Buy",S,P,M,O)    -> [trade,P,trade:nn(S),bid];
-trade(Sym,A,"Sell",S,P,M,O)   -> [trade,P,trade:nn(S),ask].
+trade(Sym,A,"Buy",S,P,M,O,Q)    -> [trade,P,trade:nn(S),bid];
+trade(Sym,A,"Sell",S,P,M,O,Q)   -> [trade,P,trade:nn(S),ask].
 
-order(Sym,_,_,S,[],M,O)       -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
-order(Sym,"delete",_,S,P,M,O) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
-order(Sym,_,"Buy",S,P,M,O)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
-order(Sym,_,"Sell",S,P,M,O)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
+order(Sym,_,_,S,[],M,O,Q)       -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S)});
+order(Sym,"delete",_,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
+order(Sym,_,"Buy",S,P,M,O,Q)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid});
+order(Sym,_,"Sell",S,P,M,O,Q)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask}).
 
 state({S,P})      -> {S+1,P}.
-print(Msg)        -> route(post(jsone:decode(Msg),#io{}),Msg).
+print(Msg)        -> try route(post(jsone:decode(Msg),#io{}),Msg) catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg}]) end.
 instance()        -> #bitmex{}.
 post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
                      Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- Bitmex#bitmex.data]}.

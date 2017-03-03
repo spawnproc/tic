@@ -15,10 +15,10 @@ timer_restart({X,Y,Z},Timer) ->
 handle_info({timer,connect,Z}, State=#state{endpoint=URL,venue=Venue,timer=Timer}) ->
     kvs:info(?MODULE,"~p ~p~n",[Z,State]),
     T = try case websocket_client:start_link(URL, Venue, [self()]) of
-                 {ok,_} -> [ kvs:info(?MODULE,"~p snapshot Symbol: ~p Bids: ~p Asks: ~p~n",
-                           [Venue,Symbol,length((Venue:snapshot(Symbol))#shot.bids),
-                                         length((Venue:snapshot(Symbol))#shot.asks) ])
-                              || Symbol <- [] ], []; %Venue:subscription() ], [];
+                 {ok,_} -> [ begin Shot = Venue:snapshot(Symbol),
+                             kvs:info(?MODULE,"~p snapshot Symbol: ~p Bids: ~p Asks: ~p Seq: ~p~n",
+                           [Venue,Symbol,length(Shot#shot.bids),length(Shot#shot.asks), Shot#shot.sequence ])
+                             end || Symbol <- [] ], []; %Venue:subscription() ], [];
                  {error,_} -> timer({0,0,Z},Timer) end
     catch E:R -> timer({0,0,Z},Timer) end,
     {noreply,State#state{timer=T}};
@@ -26,9 +26,9 @@ handle_info({timer,connect,Z}, State=#state{endpoint=URL,venue=Venue,timer=Timer
 handle_info(_Info, State) -> {noreply, State}.
 start_link(Venue,URL) -> gen_server:start_link(?MODULE, [Venue,URL], []).
 handle_call(Request,_,Proc) -> {reply,ok,Proc}.
-handle_cast(Msg, State) -> {stop, {error, {unknown_cast, Msg}}, State}.
+handle_cast(Msg, State) -> {noreply, State}.
 terminate(_Reason, #state{}) -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 init([Venue,URL]) -> {ok,#state{venue=Venue,
                                 endpoint=URL,
-                                timer=erlang:send_after(100,self(),{timer,connect,5})}}.
+                                timer=erlang:send_after(0,self(),{timer,connect,5})}}.

@@ -3,7 +3,7 @@
 -behaviour(supervisor).
 -behaviour(application).
 -compile(export_all).
--export([start/2, stop/1, init/1]).
+-export([start/2, stop/1, init/1, log_modules/0]).
 
 venues() -> [{bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,orderBookL2"},
              {gdax,   "wss://ws-feed.gdax.com"}].
@@ -16,17 +16,17 @@ f(T,[A,P,S,ask])     -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,trade:prin
 f(T,[A,P,S,bid])     -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
 f(T,X)               -> io_lib:format("~s ~p~n",       [timestamp(),X]).
 
-trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID]) ->
+trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
     {{Y,M,D},_}=calendar:universal_time(),
     file:make_dir(lists:concat(["priv/",Venue,"/",Stream,"/",Y,"-",M,"-",D])),
     FileName    = lists:concat(["priv/",Venue,"/",Stream,"/",Y,"-",M,"-",D,"/",Sym]),
-    Order = lists:flatten(f(Timestamp,Venue:Stream(Sym,A,Side,normal(p(S)),normal(p(P)),Debug,OID))),
+    Order = lists:flatten(f(Timestamp,Venue:Stream(Sym,A,Side,normal(p(S)),normal(p(P)),Debug,OID,Seq))),
     case application:get_env(trade,log,hide) of
          show -> kvs:info(?MODULE,"~p:~p:~p:~s ~p~n",[Venue,Sym,Side,Order,Debug]);
             _ -> skip end,
     file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
 
-log_modules() -> [ bitmex, gdax, book, sym, trade, venue_sup ].
+log_modules() -> [ bitmex, gdax, book, sym, trade, shot, venue_sup ].
 init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues() ] } }.
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.

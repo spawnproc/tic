@@ -4,7 +4,7 @@
 -include_lib("kvs/include/kvs.hrl").
 -compile(export_all).
 
-backend()       -> ram_copies.
+backend()       -> disc_copies.
 instruments()   -> [ N || #table{name=N,keys=[id,price]} <- kvs:tables() ].
 free({Sym,UID}) -> kvs:put(#io{uid=UID,id=UID,sym=Sym}).
 alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
@@ -25,11 +25,11 @@ metainfo() ->
      #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() }   ] }.
 
 add(#tick{sym=[]}) -> [];
-add(#tick{price=P,size=S,sym=Sym,id=O,side=Side}=T) ->
+add(#tick{price=P,size=S,sym=Sym,id=O,side=Side,sn=Q}=T) ->
     UID = book:alloc(Sym),
-    kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P}),
+    kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P,sn=Q,size=S}),
     case kvs:index(Sym,price,P) of
-         [{Sym,_,P,Id,XS,Sym,_}=X] ->
+         [{Sym,_,P,Id,XS,Sym,_,_}=X] ->
                kvs:put(setelement(#tick.size,X,XS+S)),
                [UID,P,abs(S),Side];
          [] -> kvs:put(setelement(1,
