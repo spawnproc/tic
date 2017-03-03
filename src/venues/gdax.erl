@@ -57,6 +57,8 @@ order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trad
 order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
 init([P], _)                            -> subscribe(), {ok, {1,P}}.
+websocket_info(left, _, State)          -> kvs:info(?MODULE,"sync~n",[]), {ok, State};
+websocket_info(right, _, State)         -> kvs:info(?MODULE,"check~n",[]), {ok, State};
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
