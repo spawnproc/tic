@@ -17,14 +17,13 @@ ret({ok,{{_,C,_},_,A}}) when C>=200, C<300 -> post(jsone:decode(list_to_binary(A
 ret({ok,{S,_,B}})                          -> #shot{};
 ret(Error)                                 -> #shot{}.
 
-cut() -> cut(gdax,"ETH-USD").
-cut(Venue,Topic) ->
-    #shot{sequence=Seq,bids=Bids,asks=Asks} = shot:get(Topic), Name = Venue:name(Topic),
+cut(Topic) ->
+    #shot{sequence=Seq,bids=Bids,asks=Asks} = shot:get(Topic), Name = gdax:name(Topic),
     {Orders,_} = lists:partition(fun(X) -> X#order.sn =< Seq
                                    andalso X#order.sym == Name end, kvs:all(order)),
     Ticks  = lists:map(fun(#order{size=S,price=P,uid=I,side=Side,sym=Sym,sn=Q}=O) ->
                             #tick{size=S,price=P,id=I,side=Side,sym=Sym,sn=Q} end, Orders),
-    [ T ||  T <- Ticks ], % TODO INVERT TICKS in OrderBook
+    kvs:info(?MODULE,"Order Book Cleanup: ~p~n",[ book:del(T) || T <- Ticks ]),
     [ [ case kvs:get(order,O) of
              {ok, Ord} -> kvs:info(?MODULE,"Skip Added Order: ~p. Check: size ~p at ~p price.~n",[Ord,S,P]);
              {error, _} -> Size = case Side of bid -> trade:nn(trade:normal(S));

@@ -50,8 +50,8 @@ post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
 
 init([P], _)                              -> {ok, {1,P}}.
 websocket_info(start, _, State)           -> {reply, <<>>, State};
-websocket_info(left, _, State)            -> kvs:info(?MODULE,"sync~n",[]), {ok, State};
-websocket_info(right, _, State)           -> kvs:info(?MODULE,"check~n",[]), {ok, State}.
+websocket_info({left, Sym}, _, State)     -> kvs:info(?MODULE,"sync~n",[]), {ok, State};
+websocket_info({right, Sym}, _, State)    -> kvs:info(?MODULE,"check~n",[]), {ok, State}.
 websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};
 websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}.

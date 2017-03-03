@@ -16,10 +16,7 @@ handle_info({timer,connect,Z}, State=#state{endpoint=URL,venue=Venue,timer=Timer
     kvs:info(?MODULE,"~p ~p~n",[Z,State]),
     T = try case websocket_client:start_link(URL, Venue, [self()]) of
                  {ok,Pid} -> kvs:info(?MODULE, "WebSocket started ~p for venue ~p~n", [Pid,Venue]),
-                           [ begin Shot = Venue:snapshot(Symbol),
-                             kvs:info(?MODULE,"~p snapshot Symbol: ~p Bids: ~p Asks: ~p Seq: ~p~n",
-                           [Venue,Symbol,length(Shot#shot.bids),length(Shot#shot.asks), Shot#shot.sequence ])
-                             end || Symbol <- [] ], []; %Venue:subscription() ], [];
+                             [ Pid ! {left, Symbol} || Symbol <- Venue:subscription() ], [];
                  {error,_} -> timer({0,0,Z},Timer) end
     catch E:R -> timer({0,0,Z},Timer) end,
     {noreply,State#state{timer=T}};
