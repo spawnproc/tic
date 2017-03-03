@@ -44,7 +44,9 @@ route(#gdax{type="done",price=P,side=Side,remaining_size=S,reason=A,product_id=S
 route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].
 
 trade(Sym,A,"buy",S,P,M,O,Q)      -> [trade,P,trade:nn(S),bid];
-trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,trade:nn(S),ask].
+trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,trade:nn(S),ask];
+trade(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"Warning. Reason is empty: ~p~n",[{Sym,A,R,S,P,O,Q}]),
+                                     [].
 
 order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O});
