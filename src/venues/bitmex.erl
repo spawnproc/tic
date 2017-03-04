@@ -12,7 +12,7 @@ snapshot(_)       -> #shot{}.
 
 name("XBTUSD")    -> bitmex_btc_usd_swap;
 name("COIN_BH17") -> bitmex_coin_future;
-name("DASH7D")    -> bitmex_dash_futute;
+name("DASH7D")    -> bitmex_dash_future;
 name("ETH7D")     -> bitmex_eth_future;
 name(X)           -> [].
 
