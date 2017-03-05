@@ -25,7 +25,7 @@ route(#gdax{order_type="limit"}=O,D) ->
     [];
 
 route(#gdax{order_type="market"}=O,D) ->
-    kvs:info(?MODULE,"Market: ~p~n",[O]),
+%    kvs:info(?MODULE,"Market: ~p~n",[O]),
     [];
 
 route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->

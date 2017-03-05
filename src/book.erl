@@ -17,7 +17,7 @@ metainfo() ->
      #table { name = tick,                fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
-     #table { name = bitmex_dash_futute,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
+     #table { name = bitmex_dash_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
