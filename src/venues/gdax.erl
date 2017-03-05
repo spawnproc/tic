@@ -42,6 +42,7 @@ route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,pro
     trade:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID,Seq]);
 
 route(#gdax{type="done",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
+%    kvs:info(?MODULE,"~p~n",[G]),
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
 
 route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].

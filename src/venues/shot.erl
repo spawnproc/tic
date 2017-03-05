@@ -41,9 +41,8 @@ temp(Asks,Bids,Seq) ->
 
 cut(Topic, F, G) ->
     #shot{sequence=Seq,bids=Bids,asks=Asks} = shot:get(Topic), Name = gdax:name(Topic),
-    kvs:info(?MODULE,"Sequence: ~p~n",[Seq]),
     {Orders,_} = lists:partition(fun(X) -> F(X,Seq) end, kvs:index(order,sym,Name)),
-    kvs:info(?MODULE,"Orders to Delete: ~p on topic ~p~n",[Orders,Topic]),
+    kvs:info(?MODULE,"Dead Orders: ~p Topic: ~p Seq: ~p~n",[Orders,Topic,Seq]),
     Deleted = lists:map(fun(#order{uid=O,sym=Sym}) -> book:del(#tick{sym=Sym,id=O}) end, Orders),
     G(Topic,Asks,Bids,Seq).
 
