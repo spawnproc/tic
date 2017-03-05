@@ -13,7 +13,7 @@ alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
 metainfo() ->
     #schema { name = trading,  tables = [
      #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],   copy_type=backend() },
-     #table { name = order,               fields = record_info(fields, order),                 copy_type=backend() },
+     #table { name = order,               fields = record_info(fields, order),keys=[sym,price],copy_type=backend() },
      #table { name = tick,                fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
@@ -41,10 +41,10 @@ add(#tick{price=P,size=S,sym=Sym,id=O,side=Side,sn=Q}=T) ->
                [UID,P,abs(S),Side] end.
 
 del(#tick{sym=[]}) -> [];
-del(#tick{id=O,size=S,sym=Sym}=Tick) ->
+del(#tick{id=O,sym=Sym}=Tick) ->
     case kvs:get(order,O) of
          {error,_} -> [];
-         {ok,#order{uid=O,local_id=UID,price=Price}} ->
+         {ok,#order{uid=O,local_id=UID,price=Price,size=S}} ->
                book:free({Sym,UID}),
                kvs:delete(order,O),
                case kvs:index(Sym,price,Price) of

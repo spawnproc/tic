@@ -25,7 +25,7 @@ route(#gdax{order_type="limit"}=O,D) ->
     [];
 
 route(#gdax{order_type="market"}=O,D) ->
-%    kvs:info(?MODULE,"Market: ~p~n",[O]),
+    kvs:info(?MODULE,"Market: ~p~n",[O]),
     [];
 
 route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
@@ -39,10 +39,14 @@ route(#gdax{type="change",price=P,side=Side,new_size=S2,old_size=S1,reason=A,pro
     Normal = case Side of
                   bid -> N;
                   ask -> -N end,
-    kvs:info(?MODULE,"change: ~p ~p ~p\r",[Normal,Side,trade:nn(S2)-trade:nn(S1)]),
-    trade:trace(?MODULE,[order,A,Sym,Normal,P,Side,D,T,OID,Seq]);
+    kvs:info(?MODULE,"change: ~p ~p ~p~n",[Normal,Side,trade:nn(S2)-trade:nn(S1)]),
+    trade:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID,Seq]);
 
 route(#gdax{type="done",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
+    trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
+
+route(#gdax{type="received",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
+%    kvs:info(?MODULE,"received: ~p~n",[G]),
     trade:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
 
 route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].
@@ -52,17 +56,17 @@ trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,trade:nn(S),ask];
 trade(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"Warning. Reason is empty: ~p~n",[{Sym,A,R,S,P,O,Q}]),
                                      [].
 
-order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
-order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
+order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
+order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
     kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p ~p~n",[M,R]),
-                                     book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
+                                     book:del(#tick{sym=name(Sym),id=O});
 order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
 order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
 init([P], _)                            -> subscribe(), heart_off(), {ok, {1,P}}.
-websocket_info({left, Sym, Pid}, _, State)   -> Pid ! shot:sync(Sym),  {ok, State};
-websocket_info({right, Sym, Pid}, _, State)  -> Pid ! shot:check(Sym), {ok, State};
+websocket_info({left, Sym, Pid}, _, S)  -> Pid ! shot:sync(Sym),  {ok, S};
+websocket_info({right, Sym, Pid}, _, S) -> Pid ! shot:check(Sym), {ok, S};
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};
