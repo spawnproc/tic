@@ -17,12 +17,15 @@ name('BTC-GBP') -> gdax_btc_gbp;
 name('ETH-BTC') -> gdax_eth_btc;
 name('ETH-USD') -> gdax_eth_usd;
 name(X) when is_list(X) -> name(list_to_existing_atom(X));
+name(tick)      -> tick;
 name(X)         -> [].
 
-route(#gdax{order_type="limit"},D) ->
+route(#gdax{order_type="limit"}=O,D) ->
+%    kvs:info(?MODULE,"Limit: ~p~n",[O]),
     [];
 
-route(#gdax{order_type="market"},D) ->
+route(#gdax{order_type="market"}=O,D) ->
+    kvs:info(?MODULE,"Market: ~p~n",[O]),
     [];
 
 route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
@@ -49,7 +52,6 @@ trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,trade:nn(S),ask];
 trade(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"Warning. Reason is empty: ~p~n",[{Sym,A,R,S,P,O,Q}]),
                                      [].
 
-%order(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"~p~n",[M]);
 order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
 order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P});
 order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
@@ -59,8 +61,8 @@ order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=trad
 order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
 init([P], _)                            -> subscribe(), heart_off(), {ok, {1,P}}.
-websocket_info({left, Sym}, _, State)   -> shot:cut(Sym), {ok, State};
-websocket_info({right, Sym}, _, State)  -> {ok, State};
+websocket_info({left, Sym, Pid}, _, State)   -> Pid ! shot:sync(Sym),  {ok, State};
+websocket_info({right, Sym, Pid}, _, State)  -> Pid ! shot:check(Sym), {ok, State};
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};

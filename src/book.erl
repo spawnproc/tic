@@ -14,6 +14,7 @@ metainfo() ->
     #schema { name = trading,  tables = [
      #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],   copy_type=backend() },
      #table { name = order,               fields = record_info(fields, order),                 copy_type=backend() },
+     #table { name = tick,                fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
      #table { name = bitmex_dash_futute,  fields = record_info(fields, tick), keys=[id,price], copy_type=backend() },
@@ -27,7 +28,9 @@ metainfo() ->
 add(#tick{sym=[]}) -> [];
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side,sn=Q}=T) ->
     UID = book:alloc(Sym),
-    kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P,sn=Q,size=S,side=Side}),
+    case Sym of
+         tick -> [];
+            _ -> kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P,sn=Q,size=S,side=Side}) end,
     case kvs:index(Sym,price,P) of
          [{Sym,_,P,Id,XS,Sym,_,_}=X] ->
                kvs:put(setelement(#tick.size,X,XS+S)),
@@ -46,7 +49,7 @@ del(#tick{id=O,size=S,sym=Sym}=Tick) ->
                kvs:delete(order,O),
                case kvs:index(Sym,price,Price) of
                     [X] -> kvs:put(setelement(#tick.size,X,
-                                   element(#tick.size,X)+S)),
+                                   element(#tick.size,X)-S)),
                            [UID];
                      [] -> [UID] end end.
 
