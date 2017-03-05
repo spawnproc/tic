@@ -20,12 +20,11 @@ name(X) when is_list(X) -> name(list_to_existing_atom(X));
 name(tick)      -> tick;
 name(X)         -> [].
 
-route(#gdax{order_type="limit"}=O,D) ->
-%    kvs:info(?MODULE,"Limit: ~p~n",[O]),
+route(#gdax{order_type="limit",product_id=Sym,order_id=O},D) ->
     [];
 
-route(#gdax{order_type="market"}=O,D) ->
-%    kvs:info(?MODULE,"Market: ~p~n",[O]),
+route(#gdax{order_type="market",product_id=Sym,order_id=O},D) ->
+    book:del(#tick{sym=name(Sym),id=O}),
     [];
 
 route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
@@ -54,6 +53,7 @@ trade(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"Warning. Reason is empty:
 
 order(Sym,"canceled",R,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O});
+order(Sym,"received",R,S,P,M,O,Q) -> [];
 order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
     kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p ~p~n",[M,R]),
                                      book:del(#tick{sym=name(Sym),id=O});

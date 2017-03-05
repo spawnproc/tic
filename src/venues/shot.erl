@@ -73,5 +73,5 @@ pricelevel(Sym,Price) -> [ [P,S,I] || #order{price=P,uid=I,size=S} <- kvs:index(
 check(Pid,Topic) ->
     mnesia:clear_table(tick),
     Pid ! {right, Topic, self()},
-    {A2,B2,Shot} = receive X -> X after 3000 -> {[],[]} end,
+    {A2,B2,Shot} = receive X -> X after 4000 -> {[],[],[]} end,
     shot:ok(A2,B2,Shot).
