@@ -35,19 +35,23 @@ trade(Sym,A,R,S,P,M,O,Q)        -> kvs:info(?MODULE,"Warning. Reason is empty: ~
                                    [].
 
 order(Sym,"delete",_,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
-order(Sym,"update",_,S,P,M,O,Q) -> []; % TODO
+order(Sym,"update",D,S,P,M,O,Q) -> case kvs:get(order,O) of
+                                        {ok,#order{price=Price}} ->
+                                            book:del(#tick{sym=name(Sym),id=O}),
+                                            order(Sym,"insert",D,S,Price,M,O,Q);
+                                        _ -> [] end;
 order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
-    kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p~n",[M]),
+    kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p~n",[{A,M}]),
                                    book:del(#tick{sym=name(Sym),id=O});
 order(Sym,A,"Buy",S,P,M,O,Q)    -> book:add(#tick{sym=name(Sym),id=O,size=trade:nn(S),price=P,side=bid,sn=Q});
 order(Sym,A,"Sell",S,P,M,O,Q)   -> book:add(#tick{sym=name(Sym),id=O,size=-trade:nn(S),price=P,side=ask,sn=Q}).
 
 state({S,P})      -> {S+1,P}.
-print(Msg)        -> try route(post(jsone:decode(Msg),#io{}),Msg)
-                     catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg,erlang:get_stacktrace()}]) end.
 instance()        -> #bitmex{}.
 post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
                      Bitmex#bitmex{data=[ sym:post(I, Ctx) || I <- Bitmex#bitmex.data]}.
+print(Msg)        -> try route(post(jsone:decode(Msg),#io{}),Msg)
+                     catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg,erlang:get_stacktrace()}]) end.
 
 init([P], _)                              -> {ok, {1,P}}.
 websocket_info(start, _, State)           -> {reply, <<>>, State};
