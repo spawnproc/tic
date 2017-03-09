@@ -35,8 +35,8 @@ trade(Sym,A,R,S,P,M,O,Q)        -> kvs:info(?MODULE,"Warning. Reason is empty: ~
                                    [].
 
 order(Sym,"delete",_,S,P,M,O,Q) -> book:del(#tick{sym=name(Sym),id=O});
-order(Sym,"update",D,S,P,M,O,Q) -> case kvs:get(order,O) of
-                                        {ok,#order{price=Price}} ->
+order(Sym,"update",D,S,P,M,O,Q) -> case kvs:index(order,uid,O) of
+                                        [#order{price=Price}] ->
                                             book:del(#tick{sym=name(Sym),id=O}),
                                             order(Sym,"insert",D,S,Price,M,O,Q);
                                         _ -> [] end;

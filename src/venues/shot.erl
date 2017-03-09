@@ -30,13 +30,15 @@ order(Topic,Side,S,P,O,Seq) -> gdax:order(Topic,"book",side(Side),trade:normal(S
 book(Topic) -> [ X || X <- kvs:all(gdax:name(Topic)), element(#tick.size,X) /= 0].
 
 current(Topic,Asks,Bids,Seq) ->
-    [ [ case kvs:get(order,O) of
-             {ok, Ord} -> [];
-             {error, _} -> order(Topic,Side,S,P,O,Seq) end
+    [ [ case kvs:index(order,uid,O) of
+             [Ord] -> book:del(setelement(1,#tick{id=O,sym=gdax:name(Topic)},gdax:name(Topic))),
+                      order(Topic,Side,S,P,O,kvs:next_id(order,1));
+                [] -> order(Topic,Side,S,P,O,kvs:next_id(order,1))
+        end
         || [P,S,O] <- Source ] || {Side,Source} <- [{ask,Asks},{bid,Bids}] ].
 
 temp(Asks,Bids,Seq) ->
-    [ [ order(tick,Side,S,P,O,Seq)
+    [ [ order(tick,Side,S,P,O,kvs:next_id(order,1))
         || [P,S,O] <- Source ] || {Side,Source} <- [{ask,Asks},{bid,Bids}] ].
 
 cut(Topic, F, G) ->
