@@ -10,6 +10,7 @@ book(Venue,Topic) -> [ X || X <- kvs:all(Venue:name(Topic)), element(#tick.size,
 sort(B1)          -> lists:sort(fun(X,Y) -> element(#tick.price,X) > element(#tick.price,Y) end,B1).
 ok(V,A,B,Shot)      -> ok1(V,sort(B),sort(A),0,Shot,[]).
 ok1(V,[],[],C,Shot,A) -> {ok,C,length(A),A};
+ok1(bitmex,[],[Y],C,Shot,A)  -> {ok,C,length(A),A};
 ok1(V,[],Y,C,Shot,A)  -> kvs:info(?MODULE,"Error Y: ~p Left ~p Count ~p~n",[hd(Y),length(tl(Y)),C]);
 ok1(V,X, [],C,Shot,A) -> kvs:info(?MODULE,"Error X: ~p Left ~p Count ~p~n",[hd(X),length(tl(X)),C]);
 ok1(V,[X|XR]=XF,[Y|YR]=YF,C,Shot,A)  -> case element(#tick.price,Y) == element(#tick.price,X) of
@@ -33,4 +34,5 @@ do(V,Topic) ->
     mnesia:clear_table(tick),
     application:get_env(tic,V,[]) ! {right, Topic, self()},
     {A2,B2,Shot} = receive X -> X after 4000 -> {[],[],[]} end,
+    kvs:info(?MODULE,"~p~n",[{length(A2),length(B2)}]),
     snapshot:ok(V,A2,B2,Shot).
