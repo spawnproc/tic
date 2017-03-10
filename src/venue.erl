@@ -15,10 +15,7 @@ timer_restart({X,Y,Z},Timer) ->
 handle_info({timer,connect,Z}, State=#state{endpoint=URL,venue=Venue,timer=Timer}) ->
     kvs:info(?MODULE,"~p ~p~n",[Z,State]),
     T = try case websocket_client:start_link(URL, Venue, [self()]) of
-                 {ok,Pid} -> kvs:info(?MODULE, "WebSocket started ~p for venue ~p~n", [Pid,Venue]),
-                             application:set_env(tic,Venue,Pid),
-%                             [ Pid ! {left, Symbol, self()} || Symbol <- Venue:subscription() ],
-                             [];
+                 {ok,Pid} -> kvs:info(?MODULE, "WebSocket started ~p for venue ~p~n", [Pid,Venue]), [];
                  {error,_} -> timer({0,0,Z},Timer) end
     catch E:R -> timer({0,0,Z},Timer) end,
     {noreply,State#state{timer=T}};

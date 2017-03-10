@@ -44,7 +44,7 @@ del(#tick{id=O,sym=Sym}=Tick) ->
     case kvs:index(order,uid,O) of
          [] -> %kvs:info(?MODULE,"Delete Error: ~p~n",[Tick]),
                        [];
-         [#order{uid=O,local_id=UID,price=Price,size=S,side=Side,sn=Serial}] ->
+         [#order{uid=O,local_id=UID,price=Price,size=S,side=Side,sn=Serial}|_] ->
                book:free({Sym,UID}),
                kvs:delete(order,Serial),
                case kvs:get(Sym,Price) of

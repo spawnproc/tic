@@ -16,6 +16,8 @@ name(tick)        -> tick;
 name(X)           -> [].
 
 subscription()    -> [].
+tables()          -> [bitmex_coin_future,bitmex_btc_usd_swap,
+                      bitmex_dash_future,bitmex_eth_future].
 
 route(#bitmex{table="orderBookL2",action=Ac,data=D}=B,M) ->
     lists:foldl(fun (X,A) -> action(order,B,Ac,X,M) end, [], [X||X<-D]);
@@ -50,10 +52,12 @@ post({Data}, Ctx) -> Bitmex=from_json(Data, instance()),
 print(Msg)        -> try route(post(jsone:decode(Msg),#io{}),Msg)
                      catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg,erlang:get_stacktrace()}]) end.
 
-init([P], _)                              -> {ok, {1,P}}.
+init([P], _)                              -> [ mnesia:clear_table(X) || X <- tables() ],
+                                             application:set_env(tic,?MODULE,self()),
+                                             {ok, {1,P}}.
 websocket_info(start, _, State)           -> {reply, <<>>, State};
-websocket_info({left, Sym, Pid}, _, S)    -> Pid ! snapshot:sync(bitmex,Sym),  {ok, S};
-websocket_info({right, Sym, Pid}, _, S)   -> Pid ! snapshot:check(bitmex,Sym), {ok, S};
+websocket_info({left, Sym, Pid}, _, S)    -> Pid ! snapshot:sync(?MODULE,Sym),  {ok, S};
+websocket_info({right, Sym, Pid}, _, S)   -> Pid ! snapshot:check(?MODULE,Sym), {ok, S};
 websocket_info(start, _, State)           -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)     -> {ok, State};
 websocket_handle({text, Msg}, _, State)   -> print(Msg), {ok, state(State)};

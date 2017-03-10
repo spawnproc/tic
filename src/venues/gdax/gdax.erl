@@ -9,6 +9,7 @@
 -rest_record(gdax).
 
 subscription()  -> ['BTC-USD', 'ETH-BTC', 'BTC-EUR', 'BTC-GBP', 'ETH-USD'].
+tables()        -> [gdax_btc_usd,gdax_btc_eur,gdax_btc_gbp,gdax_eth_btc,gdax_eth_usd,io,order,tick].
 
 name('BTC-USD') -> gdax_btc_usd;
 name('BTC-EUR') -> gdax_btc_eur;
@@ -62,9 +63,13 @@ heart_off()    -> websocket_client:cast(self(),{text,jsone:encode([{type,heartbe
 print(Msg)     -> try ?MODULE:route(post(jsone:decode(Msg),#io{}),Msg)
                   catch E:R -> kvs:info(?MODULE,"Error: ~p~n",[{E,R,Msg,erlang:get_stacktrace()}]) end.
 
-init([P], _)                            -> subscribe(), heart_off(), {ok, {1,P}}.
-websocket_info({left, Sym, Pid}, _, S)  -> Pid ! snapshot:sync(gdax,Sym),  {ok, S};
-websocket_info({right, Sym, Pid}, _, S) -> Pid ! snapshot:check(gdax,Sym), {ok, S};
+init([P], _)                            -> [ mnesia:clear_table(X) || X <- tables() ], subscribe(), heart_off(),
+                                           application:set_env(tic,gdax,self()),
+                                           [ self() ! {left, Symbol, []} || Symbol <- subscription() ],
+                                           {ok, {1,P}}.
+websocket_info({_, Sym, []}, _, S)      ->       snapshot:sync(?MODULE,Sym),  {ok, S};
+websocket_info({left, Sym, Pid}, _, S)  -> Pid ! snapshot:sync(?MODULE,Sym),  {ok, S};
+websocket_info({right, Sym, Pid}, _, S) -> Pid ! snapshot:check(?MODULE,Sym), {ok, S};
 websocket_info(start, _, State)         -> {reply, <<>>, State}.
 websocket_handle({pong, _}, _, State)   -> {ok, State};
 websocket_handle({text, Msg}, _, State) -> print(Msg), {ok, state(State)};

@@ -27,7 +27,7 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
     file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
 
 log_modules() -> [ bitmex, gdax, book, bsym, bshot, gshot, boot, snapshot, venue ].
-init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues() ] } }.
+init([])      -> { ok, { { one_for_one, 5, 1 }, [ ws(A,B) || {A,B} <- venues() ] } }.
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 precision()   -> 8.
