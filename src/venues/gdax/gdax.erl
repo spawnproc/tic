@@ -95,7 +95,7 @@ side(ask)    -> "sell".
 left_cut(Topic)  -> cut(Topic, fun left/2, fun left/4).
 right_cut(Topic) -> cut(Topic, fun right/2, fun right/4).
 
-right(X,Seq) -> X#order.sn > Seq.
+right(X,Seq) -> X#order.sn >= Seq.
 left(X,Seq)  -> X#order.sn < Seq.
 right(Topic,Asks,Bids,Seq)  -> temp(Asks,Bids,Seq),          {snapshot:book(?MODULE,Topic),snapshot:book(?MODULE,tick),Asks++Bids}.
 left(Topic,Asks,Bids,Seq)   -> current(Topic,Asks,Bids,Seq), {snapshot:book(?MODULE,Topic),[]}.

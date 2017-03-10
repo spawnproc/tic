@@ -65,7 +65,7 @@ websocket_handle(Msg, _Conn, State)       -> print(Msg), {noreply, state(State)}
 websocket_terminate(Msg, _, {_,P})        -> kvs:info(?MODULE,"~p terminated. notify ~p~n",[Msg,P]),
                                              erlang:send_after(100,P,{timer,connect,5}), ok.
 
-left_cut(Topic)  -> [].
+left_cut(Topic)  -> {[],[],[]}.
 right_cut(Topic) ->
     Shot0 = bshot:get(Topic), Name = name(Topic),
     Seq =  lists:max([ Id || #order{sn=Id} <- kvs:index(order,sym,Name) ]),
