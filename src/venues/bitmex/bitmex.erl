@@ -64,9 +64,9 @@ websocket_terminate(Msg, _, {_,P})        -> kvs:info(?MODULE,"~p terminated. no
 left_cut(Topic)  -> [].
 right_cut(Topic) ->
     Shot0 = bshot:get(Topic), Name = name(Topic),
-    Seq =  lists:max([ Id|| #order{sn=Id,sym=N} <- kvs:all(order), Name == N ]),
+    Seq =  lists:max([ Id || #order{sn=Id} <- kvs:index(order,sym,Name) ]),
     kvs:info(?MODULE,"Max Order Id ~p~n",[Seq]),
-    {Shot,_} = lists:partition(fun(X) -> X#bshot.id < Seq end, Shot0),
+    {Shot,_} = lists:partition(fun(X) -> X#bshot.id =< Seq end, Shot0),
     [ order(tick,"book",Side,app:normal(app:p(S)),app:normal(app:p(P)),[],O,kvs:next_id(order,1)) || {_,O,Side,S,P,Sym} <- Shot ],
     {snapshot:book(?MODULE,Topic),snapshot:book(?MODULE,tick),Shot}.
 
