@@ -1,9 +1,9 @@
-{application, trade, [
+{application, tic, [
     {description,  "TIC Trading Platform"},
     {vsn,          "0.3"},
     {applications, [crypto, public_key, asn1, ssl]},
     {modules, []},
     {registered,   []},
-    {mod, { trade, []}},
+    {mod, { app, []}},
     {env, []}
 ]}.

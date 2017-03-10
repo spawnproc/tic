@@ -1,4 +1,4 @@
--module(venue_sup).
+-module(venue).
 -description('Venue Channel Supervisor').
 -include("core.hrl").
 -compile(export_all).
@@ -16,7 +16,8 @@ handle_info({timer,connect,Z}, State=#state{endpoint=URL,venue=Venue,timer=Timer
     kvs:info(?MODULE,"~p ~p~n",[Z,State]),
     T = try case websocket_client:start_link(URL, Venue, [self()]) of
                  {ok,Pid} -> kvs:info(?MODULE, "WebSocket started ~p for venue ~p~n", [Pid,Venue]),
-                             [ Pid ! {left, Symbol, self()} || Symbol <- Venue:subscription() ],
+                             application:set_env(tic,Venue,Pid),
+%                             [ Pid ! {left, Symbol, self()} || Symbol <- Venue:subscription() ],
                              [];
                  {error,_} -> timer({0,0,Z},Timer) end
     catch E:R -> timer({0,0,Z},Timer) end,

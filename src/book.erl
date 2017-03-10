@@ -50,21 +50,21 @@ del(#tick{id=O,sym=Sym}=Tick) ->
                case kvs:get(Sym,Price) of
                     {ok,X} -> kvs:put(setelement(#tick.size,X,
                                    element(#tick.size,X)-S)),
-                              [UID];
+                              [Price,UID];
                     {error,_} -> kvs:put(setelement(1,
                              #tick{sym=Sym,size=-S,price=Price},Sym)),
-                           [UID] end end.
+                           [Price,UID] end end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
 
 print(Book) ->
-    F      = fun(X, Y) -> trade:nn(element(#tick.price,X)) < trade:nn(element(#tick.price,Y)) end,
+    F      = fun(X, Y) -> app:nn(element(#tick.price,X)) < app:nn(element(#tick.price,Y)) end,
     Sorted = lists:sort(F, kvs:all(Book)),
 
     {PW,SW} = lists:foldr(fun({_,P,S,_,_,_,_},{X,Y}) ->
-                 { erlang:max(X,length(trade:print_float(P))),
-                   erlang:max(Y,length(trade:print_float(integer_to_list(S)))) } end, {0,0}, Sorted),
+                 { erlang:max(X,length(app:print_float(P))),
+                   erlang:max(Y,length(app:print_float(integer_to_list(S)))) } end, {0,0}, Sorted),
 
     io:format("~s ~s~n", [string:left("Price",PW,$ ),
                           string:left("Size",SW,$ )]),
@@ -77,11 +77,11 @@ print(Book) ->
     Side = case S < 0 of true -> ask; _ -> bid end,
 
     io:fwrite(<<"~s">>,[book:Side(io_lib:format("~s ~s~n",
-            [ string:right(trade:print_float(P),PW,$ ),
-              string:left(trade:print_float(integer_to_list(S)),SW,$ ) ]))]), {D+1,Acc+S} end, {0,0}, Sorted),
+            [ string:right(app:print_float(P),PW,$ ),
+              string:left(app:print_float(integer_to_list(S)),SW,$ ) ]))]), {D+1,Acc+S} end, {0,0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
-    io:format("Total: ~s~n",[trade:print_float(trade:p(Total))]),
+    io:format("Total: ~s~n",[app:print_float(app:p(Total))]),
 
     {Depth,Total}.
 

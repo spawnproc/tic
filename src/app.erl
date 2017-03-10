@@ -1,5 +1,5 @@
--module(trade).
--description('TIC Trading Platform').
+-module(app).
+-description('TIC Trade Integration Platform').
 -behaviour(supervisor).
 -behaviour(application).
 -compile(export_all).
@@ -9,11 +9,11 @@ venues() -> [{bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,orderBookL2
              {gdax,   "wss://ws-feed.gdax.com"}].
 
 f(T,[])              -> [];
-f(T,[A])             -> io_lib:format("~s -~p 0~n",    [timestamp(),A]);
-f(T,[trade,P,S,bid]) -> io_lib:format("~s ~s ~s~n",    [timestamp(),  trade:print_float(P),trade:print_float(S)]);
-f(T,[trade,P,S,ask]) -> io_lib:format("~s ~s -~s~n",   [timestamp(),  trade:print_float(P),trade:print_float(S)]);
-f(T,[A,P,S,ask])     -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
-f(T,[A,P,S,bid])     -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,trade:print_float(P),trade:print_float(S)]);
+f(T,[P,A])           -> io_lib:format("~s -~p 0~n",    [timestamp(),A]);
+f(T,[trade,P,S,bid]) -> io_lib:format("~s ~s ~s~n",    [timestamp(),  app:print_float(P),app:print_float(S)]);
+f(T,[trade,P,S,ask]) -> io_lib:format("~s ~s -~s~n",   [timestamp(),  app:print_float(P),app:print_float(S)]);
+f(T,[A,P,S,ask])     -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,app:print_float(P),app:print_float(S)]);
+f(T,[A,P,S,bid])     -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,app:print_float(P),app:print_float(S)]);
 f(T,X)               -> io_lib:format("~s ~p~n",       [timestamp(),X]).
 
 trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
@@ -26,13 +26,13 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
             _ -> skip end,
     file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
 
-log_modules() -> [ bitmex, gdax, book, sym, trade, shot, venue_sup ].
+log_modules() -> [ bitmex, gdax, book, bsym, bshot, gshot, boot, snapshot, venue ].
 init([])      -> { ok, { { one_for_one, 60, 10 }, [ ws(A,B) || {A,B} <- venues() ] } }.
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 precision()   -> 8.
 pad(I,X)      -> string:right(integer_to_list(I),X,$0).
-ws(Venue,URL) -> {Venue,{venue_sup,start_link,[Venue,URL]},permanent,1000,worker,[Venue]}.
+ws(Venue,URL) -> {Venue,{venue,start_link,[Venue,URL]},permanent,1000,worker,[Venue]}.
 dirs()        -> file:make_dir("priv"),
                  [ begin file:make_dir(lists:concat(["priv/",X])),
                    [ file:make_dir(lists:concat(["priv/",X,"/",Y]))
