@@ -17,7 +17,7 @@ ok1(V,[X|XR]=XF,[Y|YR]=YF,C,Shot,A)  -> case element(#tick.price,Y) == element(#
                                            true   -> ok1(V,XR,YR,C+1,Shot,A);
                                            false  -> Acc = [V:shotlevel(Shot,element(#tick.price,X)),
                                                           pricelevel(element(1,Y),element(#tick.price,X))],
-                                                     kvs:info(?MODULE,"Size Mismatch~nTick: ~p~nBook: ~p~n",Acc),
+%                                                     kvs:info(?MODULE,"Size Mismatch~nTick: ~p~nBook: ~p~n",Acc),
                                                      ok1(V,XR,YR,C+1,Shot,[Acc|A])
                                        end;
                               false -> case element(#tick.price,Y) > element(#tick.price,X) of

@@ -26,7 +26,7 @@ route(#bitmex{table="trade",action=Ac,data=D}=B,M) ->
 route(A,M) -> kvs:info(?MODULE,"~p ~p~n",[A,M]), [].
 
 action(Stream,T,A,#bsym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=Packet,Debug) ->
-    app:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID,[]]).
+    app:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID,OID]).
 
 trade(Sym,A,"Buy",S,P,M,O,Q)    -> [trade,P,app:nn(S),bid];
 trade(Sym,A,"Sell",S,P,M,O,Q)   -> [trade,P,app:nn(S),ask];
@@ -63,7 +63,10 @@ websocket_terminate(Msg, _, {_,P})        -> kvs:info(?MODULE,"~p terminated. no
 
 left_cut(Topic)  -> [].
 right_cut(Topic) ->
-    Shot = bshot:get(Topic), Name = name(Topic),
+    Shot0 = bshot:get(Topic), Name = name(Topic),
+    Seq =  lists:max([ Id|| #order{sn=Id,sym=N} <- kvs:all(order), Name == N ]),
+    kvs:info(?MODULE,"Max Order Id ~p~n",[Seq]),
+    {Shot,_} = lists:partition(fun(X) -> X#bshot.id < Seq end, Shot0),
     [ order(tick,"book",Side,app:normal(app:p(S)),app:normal(app:p(P)),[],O,kvs:next_id(order,1)) || {_,O,Side,S,P,Sym} <- Shot ],
     {snapshot:book(?MODULE,Topic),snapshot:book(?MODULE,tick),Shot}.
 
