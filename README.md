@@ -121,11 +121,24 @@ bitmex:"XBTUSD":"Buy":10:55:23.474 +712 1201.9 1000.0
 
 ## TIC WebSocket Protocol
 
+TIC protocol is using WAMP style of JSON messages, where we are using only arrays,
+but not objects structures. The message itself is an JSON array.
+
 ```
 $ wscat -c ws://127.0.0.1:9000/gdax/BTC-USD
 connected (press CTRL+C to quit)
-> N2O
-< TIC
+< ['05:35:29.783', +5195, 1035.15, 0.24517252]
+< ['05:35:29.785', +5349, 1094.27, 0.04]
+< ['05:35:29.816', +5453, 1094.34, 0.1]
+< ['05:35:29.857', +5564, 1094.37, 0.2479]
+> book
+< 10000000.0 -0.01
+   9.99999 -317.078
+       1.0 -5.010673
+       0.5 -5.01
+       0.3 -0.011
+      0.25 -9.877214
+       0.2 -0.011
 ```
 
 Credits

@@ -9,12 +9,12 @@ venues() -> [{bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,orderBookL2
              {gdax,   "wss://ws-feed.gdax.com"}].
 
 f(T,[])              -> [];
-f(T,[P,A])           -> io_lib:format("~s -~p 0~n",    [timestamp(),A]);
-f(T,[trade,P,S,bid]) -> io_lib:format("~s ~s ~s~n",    [timestamp(),  app:print_float(P),app:print_float(S)]);
-f(T,[trade,P,S,ask]) -> io_lib:format("~s ~s -~s~n",   [timestamp(),  app:print_float(P),app:print_float(S)]);
-f(T,[A,P,S,ask])     -> io_lib:format("~s -~p ~s ~s~n",[timestamp(),A,app:print_float(P),app:print_float(S)]);
-f(T,[A,P,S,bid])     -> io_lib:format("~s +~p ~s ~s~n",[timestamp(),A,app:print_float(P),app:print_float(S)]);
-f(T,X)               -> io_lib:format("~s ~p~n",       [timestamp(),X]).
+f(T,[P,A])           -> io_lib:format("['~s', -~p, 0]",     [timestamp(),A]);
+f(T,[trade,P,S,bid]) -> io_lib:format("['~s', ~s, ~s]",     [timestamp(),  app:print_float(P),app:print_float(S)]);
+f(T,[trade,P,S,ask]) -> io_lib:format("['~s', ~s, -~s]",    [timestamp(),  app:print_float(P),app:print_float(S)]);
+f(T,[A,P,S,ask])     -> io_lib:format("['~s', -~p, ~s, ~s]",[timestamp(),A,app:print_float(P),app:print_float(S)]);
+f(T,[A,P,S,bid])     -> io_lib:format("['~s', +~p, ~s, ~s]",[timestamp(),A,app:print_float(P),app:print_float(S)]);
+f(T,X)               -> io_lib:format("['~s', ~p]",         [timestamp(),X]).
 
 trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
     {{Y,M,D},_}=calendar:universal_time(),
@@ -24,9 +24,10 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
     case application:get_env(trade,log,hide) of
          show -> kvs:info(?MODULE,"~p:~p:~p:~s ~p~n",[Venue,Sym,Side,Order,Debug]);
             _ -> skip end,
-    file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
+    wf:send({Venue,wf:to_atom(Sym)},{text,list_to_binary(Order)}),
+    file:write_file(FileName, list_to_binary(Order++"\n"), [raw, binary, append, read, write]).
 
-spec(Port) -> ranch:child_spec(http, 100, ranch_tcp, port(Port), cowboy_protocol, env()).
+spec(Port) -> ranch:child_spec(http, 1, ranch_tcp, port(Port), cowboy_protocol, env()).
 env()      -> [ { env, [ { dispatch, points() } ] } ].
 port(Port) -> [ { port, Port  } ].
 points()   -> cowboy_router:compile([{'_', [ {"/[...]", n2o_stream, []} ]}]).

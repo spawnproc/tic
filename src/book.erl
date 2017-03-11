@@ -58,7 +58,7 @@ del(#tick{id=O,sym=Sym}=Tick) ->
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
 
-print(Book) ->
+print0(Book) ->
     F      = fun(X, Y) -> app:nn(element(#tick.price,X)) < app:nn(element(#tick.price,Y)) end,
     Sorted = lists:sort(F, kvs:all(Book)),
 
@@ -71,17 +71,22 @@ print(Book) ->
 
     io:format("~s ~s~n", [lists:duplicate(PW,"-"),lists:duplicate(SW,"-")]),
 
-    {Depth,Total}  = lists:foldr(fun({_,_,0,_,_,_,_},A) -> A;
-                                    ({_,P,S,_,_,_,_},{D,Acc}) ->
+    {Depth,Strings,Total}  = lists:foldr(fun({_,_,0,_,_,_,_},A) -> A;
+                                    ({_,P,S,_,_,_,_},{D,Strings,Acc}) ->
 
     Side = case S < 0 of true -> ask; _ -> bid end,
 
-    io:fwrite(<<"~s">>,[book:Side(io_lib:format("~s ~s~n",
+    Str = io_lib:format("~s",[io_lib:format("~s ~s~n",
             [ string:right(app:print_float(P),PW,$ ),
-              string:left(app:print_float(integer_to_list(S)),SW,$ ) ]))]), {D+1,Acc+S} end, {0,0}, Sorted),
+              string:left(app:print_float(integer_to_list(S)),SW,$ ) ])]),
+
+    io:fwrite(<<"~s">>,[book:Side(Str)]),
+
+    {D+1,[Str|Strings],Acc+S} end, {0,[],0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
     io:format("Total: ~s~n",[app:print_float(app:p(Total))]),
 
-    {Depth,Total}.
+    {Depth,lists:reverse(Strings),Total}.
 
+print(Book) -> {A,B,C} = print0(Book), {A,C}.
