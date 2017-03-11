@@ -121,7 +121,7 @@ bitmex:"XBTUSD":"Buy":10:55:23.474 +712 1201.9 1000.0
 
 ## TIC WebSocket Protocol
 
-TIC protocol is using WAMP style of JSON messages, where we are using only arrays,
+TIC protocol is using WAMP style of JSON messages, where we have only arrays,
 but not object structures. The message itself is an JSON array.
 
 ```
