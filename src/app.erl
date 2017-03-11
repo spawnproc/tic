@@ -25,8 +25,10 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
          show -> kvs:info(?MODULE,"~p:~p:~p:~s ~p~n",[Venue,Sym,Side,Order,Debug]);
             _ -> skip end,
     wf:send({Venue,wf:to_atom(Sym)},{text,list_to_binary(Order)}),
-    file:write_file(FileName, list_to_binary(Order++"\n"), [raw, binary, append, read, write]).
+    file:write_file(FileName, wrap(Order), [raw, binary, append, read, write]).
 
+wrap(<<>>) -> <<>>;
+wrap(List) -> list_to_binary(List++"\n").
 spec(Port) -> ranch:child_spec(http, 1, ranch_tcp, port(Port), cowboy_protocol, env()).
 env()      -> [ { env, [ { dispatch, points() } ] } ].
 port(Port) -> [ { port, Port  } ].
