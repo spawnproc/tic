@@ -26,8 +26,14 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
             _ -> skip end,
     file:write_file(FileName, list_to_binary(Order), [raw, binary, append, read, write]).
 
-log_modules() -> [ bitmex, gdax, book, bsym, bshot, gshot, boot, snapshot, venue ].
-init([])      -> { ok, { { one_for_one, 5, 1 }, [ ws(A,B) || {A,B} <- venues() ] } }.
+spec(Port) -> ranch:child_spec(http, 100, ranch_tcp, port(Port), cowboy_protocol, env()).
+env()      -> [ { env, [ { dispatch, points() } ] } ].
+port(Port) -> [ { port, Port  } ].
+points()   -> cowboy_router:compile([{'_', [ {"/[...]", n2o_stream, []} ]}]).
+
+log_modules() -> [ bitmex, gdax, book, bsym, bshot, gshot, app, snapshot, venue, protocol ].
+init([])      -> { ok, { { one_for_one, 5, 1 }, [spec(wf:config(n2o,port,9000))] ++
+                                                [ ws(A,B) || {A,B} <- venues() ] } }.
 start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
 stop(_)       -> ok.
 precision()   -> 8.

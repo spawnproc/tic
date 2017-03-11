@@ -119,6 +119,15 @@ bitmex:"XBTUSD":"Buy":10:55:23.474 +712 1201.9 1000.0
  {...}|...]
 ```
 
+## TIC WebSocket Protocol
+
+```
+$ wscat -c ws://127.0.0.1:9000/gdax/BTC-USD
+connected (press CTRL+C to quit)
+> N2O
+< TIC
+```
+
 Credits
 -------
 
