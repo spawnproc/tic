@@ -33,10 +33,10 @@ add(#tick{price=P,size=S,sym=Sym,id=O,side=Side,sn=Q}=T) ->
             _ -> kvs:put(#order{uid=O,local_id=UID,sym=Sym,price=P,sn=Q,size=S,side=Side}) end,
     case kvs:get(Sym,P) of
          {ok,{Sym,P,XS,_,Sym,_,_}=X} ->
-               kvs:put(setelement(#tick.size,X,XS+S)),
+               kvs:put(setelement(#tick.size,X,XS+abs(S))),
                [UID,P,abs(S),Side];
          {error,_} -> kvs:put(setelement(1,
-                       setelement(#tick.size,T,S),Sym)),
+                       setelement(#tick.size,T,abs(S)),Sym)),
                [UID,P,abs(S),Side] end.
 
 del(#tick{sym=[]}) -> [];
@@ -49,11 +49,9 @@ del(#tick{id=O,sym=Sym}=Tick) ->
                kvs:delete(order,Serial),
                case kvs:get(Sym,Price) of
                     {ok,X} -> kvs:put(setelement(#tick.size,X,
-                                   element(#tick.size,X)-S)),
+                                   element(#tick.size,X)-abs(S))),
                               [Price,UID];
-                    {error,_} -> kvs:put(setelement(1,
-                             #tick{sym=Sym,size=-S,price=Price},Sym)),
-                           [Price,UID] end end.
+                 {error,_} -> [Price,UID] end end.
 
 ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
