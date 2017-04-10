@@ -1,7 +1,11 @@
 Node.prototype.on = Node.prototype.addEventListener
 var $ = document.querySelector.bind(document)
 
-instrument.on('click', e=>markets.classList.add('show'))
+instrument.on('click', function(e) {
+    markets.classList.add('show')
+    document.body.style.overflow = 'hidden'
+})
+
 
 let instruments = new Map()
 for (let a of document.querySelectorAll('.market-instrument')) {
@@ -13,13 +17,13 @@ selectedInstrument.classList.add('selected-instrument')
 
 markets.on('click', function(e) {
     if (instruments.has(e.target)) {
-        instrument.textContent = instruments.get(e.target)
         markets.classList.remove('show')
+         document.body.style.overflow = 'visible'
         if (selectedInstrument !== e.target) {
-            console.log(e.target)
             selectedInstrument.classList.remove('selected-instrument')
             selectedInstrument = e.target
             selectedInstrument.classList.add('selected-instrument')
+            instrument.textContent = instruments.get(selectedInstrument)
         }
     }
 })
@@ -34,13 +38,11 @@ for (let w of document.querySelectorAll('.mobile-title')) {
 }
 
 function showWidget(e) {
-    if (this !== selectedWidget) {
+    if (e.target !== selectedWidget) {
         selectedWidget.classList.remove('selected-widget')
-        window[selectedWidget.textContent].classList.remove('show')
         window[selectedWidget.textContent].classList.remove('show')
         selectedWidget = e.target
         selectedWidget.classList.add('selected-widget')
-        window[selectedWidget.textContent].classList.add('show')
         window[selectedWidget.textContent].classList.add('show')
     }
 }
