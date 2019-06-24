@@ -1,11 +1,11 @@
 -module(protocol).
 -description('TIC WebSocket Protocol').
--include_lib("n2o/include/wf.hrl").
+-include_lib("n2o/include/n2o.hrl").
 -compile(export_all).
 
 finish(State,Ctx) -> {ok,State,Ctx}.
-init(State,Ctx)   -> wf:reg(route(wf:path(Ctx#cx.req))), {ok,State,Ctx#cx{module=protocol}}.
-event(Event)      -> kvs:info(?MODULE,"Event: ~p~n",[Event]).
+init(State,#cx{req=Req}=Ctx) -> #{path:=Path}=Req, n2o:reg(route(Path)), {ok,State,Ctx#cx{module=protocol}}.
+event(Event) -> ok.
 
 info({text,<<"book">>}=Message, Req, State) ->
     {X,Y} = route(wf:path(Req)),
