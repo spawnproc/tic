@@ -1,29 +1,29 @@
 -module(book).
 -include("core.hrl").
--include_lib("kvs/include/metainfo.hrl").
--include_lib("kvs/include/kvs.hrl").
+%-include_lib("kvs/include/metainfo.hrl").
+%-include_lib("kvs/include/kvs.hrl").
 -compile(export_all).
 
 backend()       -> ram_copies.
-instruments()   -> [ N || #table{name=N,keys=[id]} <- kvs:tables() ].
+instruments()   -> []. %[ N || #table{name=N,keys=[id]} <- kvs:tables() ].
 free({Sym,UID}) -> kvs:put(#io{uid=UID,id=UID,sym=Sym}).
 alloc(Symbol)   -> case kvs:index(io,sym,Symbol) of [] -> kvs:next_id(Symbol,1);
                        [#io{uid=Key,sym=Sym,id=UID}|_] -> kvs:delete(io,Key), UID end.
 
-metainfo() ->
-    #schema { name = trading,  tables = [
-     #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],        copy_type=backend() },
-     #table { name = order,               fields = record_info(fields, order),keys=[sym,price,uid], copy_type=backend() },
-     #table { name = tick,                fields = record_info(fields, tick), keys=[sym,id],        copy_type=backend() },
-     #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = bitmex_dash_future,  fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = 'gdax_btc_gbp',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = 'gdax_eth_btc',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
-     #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id], copy_type=backend() }   ] }.
+%metainfo() ->
+%    #schema { name = trading,  tables = [
+%     #table { name = io,                  fields = record_info(fields, io),   keys=[sym,id],        copy_type=backend() },
+%     #table { name = order,               fields = record_info(fields, order),keys=[sym,price,uid], copy_type=backend() },
+%     #table { name = tick,                fields = record_info(fields, tick), keys=[sym,id],        copy_type=backend() },
+%     #table { name = bitmex_btc_usd_swap, fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = bitmex_coin_future,  fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = bitmex_dash_future,  fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = bitmex_eth_future,   fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = 'gdax_btc_usd',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = 'gdax_btc_eur',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = 'gdax_btc_gbp',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = 'gdax_eth_btc',      fields = record_info(fields, tick), keys=[id], copy_type=backend() },
+%     #table { name = 'gdax_eth_usd',      fields = record_info(fields, tick), keys=[id], copy_type=backend() }   ] }.
 
 add(#tick{sym=[]}) -> [];
 add(#tick{price=P,size=S,sym=Sym,id=O,side=Side,sn=Q}=T) ->
@@ -57,12 +57,12 @@ ask(S) -> lists:concat(["\e[38;2;208;002;027m",S,"\e[0m"]).
 bid(S) -> lists:concat(["\e[38;2;126;211;033m",S,"\e[0m"]).
 
 print0(Book) ->
-    F      = fun(X, Y) -> app:nn(element(#tick.price,X)) < app:nn(element(#tick.price,Y)) end,
+    F      = fun(X, Y) -> tic:nn(element(#tick.price,X)) < tic:nn(element(#tick.price,Y)) end,
     Sorted = lists:sort(F, kvs:all(Book)),
 
     {PW,SW} = lists:foldr(fun({_,P,S,_,_,_,_},{X,Y}) ->
-                 { erlang:max(X,length(app:print_float(P))),
-                   erlang:max(Y,length(app:print_float(integer_to_list(S)))) } end, {0,0}, Sorted),
+                 { erlang:max(X,length(tic:print_float(P))),
+                   erlang:max(Y,length(tic:print_float(integer_to_list(S)))) } end, {0,0}, Sorted),
 
     io:format("~s ~s~n", [string:left("Price",PW,$ ),
                           string:left("Size",SW,$ )]),
@@ -75,15 +75,15 @@ print0(Book) ->
     Side = case S < 0 of true -> ask; _ -> bid end,
 
     Str = io_lib:format("~s",[io_lib:format("~s ~s~n",
-            [ string:right(app:print_float(P),PW,$ ),
-              string:left(app:print_float(integer_to_list(S)),SW,$ ) ])]),
+            [ string:right(tic:print_float(P),PW,$ ),
+              string:left(tic:print_float(integer_to_list(S)),SW,$ ) ])]),
 
     io:fwrite(<<"~s">>,[book:Side(Str)]),
 
     {D+1,[Str|Strings],Acc+S} end, {0,[],0}, Sorted),
 
     io:format("Depth: ~p~n",[Depth]),
-    io:format("Total: ~s~n",[app:print_float(app:p(Total))]),
+    io:format("Total: ~s~n",[tic:print_float(tic:p(Total))]),
 
     {Depth,lists:reverse(Strings),Total}.
 

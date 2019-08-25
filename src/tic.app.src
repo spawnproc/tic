@@ -4,6 +4,6 @@
     {applications, [crypto, public_key, asn1, ssl]},
     {modules, []},
     {registered,   []},
-    {mod, { app, []}},
+    {mod, { tic, []}},
     {env, []}
 ]}.

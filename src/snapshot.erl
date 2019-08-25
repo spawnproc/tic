@@ -26,7 +26,7 @@ ok1(V,[X|XR]=XF,[Y|YR]=YF,C,Shot,A)  -> case element(#tick.price,Y) == element(#
                                        end
                          end.
 
-shotlevel(Shot,Price) -> [ [app:normal(P),app:normal(S),I] || [P,S,I] <- Shot, app:normal(P) == Price ].
+shotlevel(Shot,Price) -> [ [tic:normal(P),tic:normal(S),I] || [P,S,I] <- Shot, tic:normal(P) == Price ].
 pricelevel(Sym,Price) -> [ [P,S,I] || #order{price=P,uid=I,size=S} <- kvs:index(order,sym,Sym), P == Price ].
 
 do(V,Topic) ->

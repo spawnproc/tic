@@ -29,10 +29,10 @@ route(#bitmex{table="trade",action=Ac,data=D}=B,M) ->
 route(A,M) -> kvs:info(?MODULE,"~p ~p~n",[A,M]), [].
 
 action(Stream,T,A,#bsym{symbol=Sym,side=Side,size=S,price=P,timestamp=TS,id=OID}=Packet,Debug) ->
-    app:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID,OID]).
+    tic:trace(?MODULE,[Stream,A,Sym,S,P,Side,Debug,TS,OID,OID]).
 
-trade(Sym,A,"Buy",S,P,M,O,Q)    -> [trade,P,app:nn(S),bid];
-trade(Sym,A,"Sell",S,P,M,O,Q)   -> [trade,P,app:nn(S),ask];
+trade(Sym,A,"Buy",S,P,M,O,Q)    -> [trade,P,tic:nn(S),bid];
+trade(Sym,A,"Sell",S,P,M,O,Q)   -> [trade,P,tic:nn(S),ask];
 trade(Sym,A,R,S,P,M,O,Q)        -> kvs:info(?MODULE,"Warning. Reason is empty: ~p~n",[{Sym,A,R,S,P,O,Q}]),
                                    [].
 
@@ -43,8 +43,8 @@ order(Sym,"update",D,S,P,M,O,Q) -> case book:del(#tick{id=O,sym=name(Sym)}) of
 order(Sym,A,R,S,P,M,O,Q) when S == 0 orelse P == [] ->
     kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p~n",[{A,M}]),
                                    book:del(#tick{sym=name(Sym),id=O});
-order(Sym,A,"Buy",S,P,M,O,Q)    -> book:add(#tick{sym=name(Sym),id=O,size=app:nn(S),price=P,side=bid,sn=Q});
-order(Sym,A,"Sell",S,P,M,O,Q)   -> book:add(#tick{sym=name(Sym),id=O,size=-app:nn(S),price=P,side=ask,sn=Q}).
+order(Sym,A,"Buy",S,P,M,O,Q)    -> book:add(#tick{sym=name(Sym),id=O,size=tic:nn(S),price=P,side=bid,sn=Q});
+order(Sym,A,"Sell",S,P,M,O,Q)   -> book:add(#tick{sym=name(Sym),id=O,size=-tic:nn(S),price=P,side=ask,sn=Q}).
 
 state({S,P})      -> {S+1,P}.
 instance()        -> #bitmex{}.
@@ -72,7 +72,7 @@ right_cut(Topic) ->
     Seq =  lists:max([ Id || #order{sn=Id} <- kvs:index(order,sym,Name) ]),
     kvs:info(?MODULE,"Max Order Id ~p~n",[Seq]),
     {Shot,_} = lists:partition(fun(X) -> X#bshot.id =< Seq end, Shot0),
-    [ order(tick,"book",Side,app:normal(app:p(S)),app:normal(app:p(P)),[],O,kvs:next_id(order,1)) || {_,O,Side,S,P,Sym} <- Shot ],
+    [ order(tick,"book",Side,tic:normal(tic:p(S)),tic:normal(tic:p(P)),[],O,kvs:next_id(order,1)) || {_,O,Side,S,P,Sym} <- Shot ],
     {snapshot:book(?MODULE,Topic),snapshot:book(?MODULE,tick),Shot}.
 
-shotlevel(Shot,Price) -> [ [app:normal(app:p(P)),app:normal(app:p(S)),O] || {_,O,Side,S,P,Sym} <- Shot, app:normal(app:p(P)) == Price ].
+shotlevel(Shot,Price) -> [ [tic:normal(tic:p(P)),tic:normal(tic:p(S)),O] || {_,O,Side,S,P,Sym} <- Shot, tic:normal(tic:p(P)) == Price ].

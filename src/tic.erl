@@ -1,4 +1,4 @@
--module(app).
+-module(tic).
 -description('TIC Trade Integration Platform').
 -behaviour(supervisor).
 -behaviour(application).
@@ -10,10 +10,10 @@ venues() -> [{bitmex, "wss://www.bitmex.com/realtime?subscribe=trade,orderBookL2
 
 f(T,[])              -> [];
 f(T,[P,A])           -> io_lib:format("['~s', -~p, 0]",     [timestamp(),A]);
-f(T,[trade,P,S,bid]) -> io_lib:format("['~s', ~s, ~s]",     [timestamp(),  app:print_float(P),app:print_float(S)]);
-f(T,[trade,P,S,ask]) -> io_lib:format("['~s', ~s, -~s]",    [timestamp(),  app:print_float(P),app:print_float(S)]);
-f(T,[A,P,S,ask])     -> io_lib:format("['~s', -~p, ~s, ~s]",[timestamp(),A,app:print_float(P),app:print_float(S)]);
-f(T,[A,P,S,bid])     -> io_lib:format("['~s', +~p, ~s, ~s]",[timestamp(),A,app:print_float(P),app:print_float(S)]);
+f(T,[trade,P,S,bid]) -> io_lib:format("['~s', ~s, ~s]",     [timestamp(),  tic:print_float(P),tic:print_float(S)]);
+f(T,[trade,P,S,ask]) -> io_lib:format("['~s', ~s, -~s]",    [timestamp(),  tic:print_float(P),tic:print_float(S)]);
+f(T,[A,P,S,ask])     -> io_lib:format("['~s', -~p, ~s, ~s]",[timestamp(),A,tic:print_float(P),tic:print_float(S)]);
+f(T,[A,P,S,bid])     -> io_lib:format("['~s', +~p, ~s, ~s]",[timestamp(),A,tic:print_float(P),tic:print_float(S)]);
 f(T,X)               -> io_lib:format("['~s', ~p]",         [timestamp(),X]).
 
 trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
@@ -22,7 +22,7 @@ trace(Venue,[Stream,A,Sym,S,P,Side,Debug,Timestamp,OID,Seq]) ->
     FileName    = lists:concat(["priv/",Venue,"/",Stream,"/",Y,"-",M,"-",D,"/",Sym]),
     Order = lists:flatten(f(Timestamp,Venue:Stream(Sym,A,Side,normal(p(S)),normal(p(P)),Debug,OID,Seq))),
     case application:get_env(trade,log,hide) of
-         show -> kvs:info(?MODULE,"~p:~p:~p:~s ~p~n",[Venue,Sym,Side,Order,Debug]);
+         show -> io:format("~p:~p:~p:~s ~p~n",[Venue,Sym,Side,Order,Debug]);
             _ -> skip end,
     wf:send({Venue,wf:to_atom(Sym)},{text,list_to_binary(Order)}),
     wrap(FileName,Order).
@@ -35,9 +35,10 @@ port(Port) -> [ { port, Port  } ].
 points()   -> cowboy_router:compile([{'_', [ {"/[...]", n2o_stream, []} ]}]).
 
 log_modules() -> [ bitmex, gdax, book, bsym, bshot, gshot, app, snapshot, venue, protocol ].
-init([])      -> { ok, { { one_for_one, 5, 1 }, [spec(wf:config(n2o,port,9000))] ++
+init([])      -> { ok, { { one_for_one, 5, 1 }, [spec(application:get_env(n2o,port,9000))] ++
                                                 [ ws(A,B) || {A,B} <- venues() ] } }.
-start(_,_)    -> dirs(), kvs:join(), supervisor:start_link({local,ticker},?MODULE,[]).
+start(_,_)    -> dirs(), %kvs:join(), 
+                 supervisor:start_link({local,?MODULE},?MODULE,[]).
 stop(_)       -> ok.
 precision()   -> 8.
 pad(I,X)      -> string:right(integer_to_list(I),X,$0).

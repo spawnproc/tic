@@ -27,23 +27,23 @@ route(#gdax{order_type="market",product_id=Sym,order_id=O},D) ->
     [];
 
 route(#gdax{type="match",price=P,side=Side,size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
-    app:trace(?MODULE,[trade,A,Sym,S,P,Side,D,T,OID,Seq]);
+    tic:trace(?MODULE,[trade,A,Sym,S,P,Side,D,T,OID,Seq]);
 
 route(#gdax{type="open",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
-    app:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
+    tic:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
 
 route(#gdax{type="change",price=P,side=Side,new_size=S2,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
     kvs:info(?MODULE,"Change Order: ~p~n",[G]),
     book:del(#tick{id=OID,sym=name(Sym)}),
-    app:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID,Seq]);
+    tic:trace(?MODULE,[order,A,Sym,S2,P,Side,D,T,OID,Seq]);
 
 route(#gdax{type="done",price=P,side=Side,remaining_size=S,reason=A,product_id=Sym,time=T,order_id=OID,sequence=Seq}=G,D) ->
-    app:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
+    tic:trace(?MODULE,[order,A,Sym,S,P,Side,D,T,OID,Seq]);
 
 route(_,D) -> kvs:info(?MODULE,"~p~n",[D]), [].
 
-trade(Sym,A,"buy",S,P,M,O,Q)      -> [trade,P,app:nn(S),bid];
-trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,app:nn(S),ask];
+trade(Sym,A,"buy",S,P,M,O,Q)      -> [trade,P,tic:nn(S),bid];
+trade(Sym,A,"sell",S,P,M,O,Q)     -> [trade,P,tic:nn(S),ask];
 trade(Sym,A,R,S,P,M,O,Q)          -> kvs:info(?MODULE,"Warning. Reason is empty: ~p~n",[{Sym,A,R,S,P,O,Q}]),
                                      [].
 
@@ -52,8 +52,8 @@ order(Sym,"filled",R,S,P,M,O,Q)   -> book:del(#tick{sym=name(Sym),id=O});
 order(Sym,A,R,S,P,M,O,Q) when S == [] orelse P == [] ->
     kvs:info(?MODULE,"if it isn't cancel/filled report error: ~p ~p~n",[M,R]),
                                      book:del(#tick{sym=name(Sym),id=O});
-order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=app:nn(S),price=P,side=bid,sn=Q});
-order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-app:nn(S),price=P,side=ask,sn=Q}).
+order(Sym,A,"buy",S,P,M,O,Q)      -> book:add(#tick{sym=name(Sym),id=O,size=tic:nn(S),price=P,side=bid,sn=Q});
+order(Sym,A,"sell",S,P,M,O,Q)     -> book:add(#tick{sym=name(Sym),id=O,size=-tic:nn(S),price=P,side=ask,sn=Q}).
 
 state({S,P})   -> {S+1,P}.
 instance()     -> #gdax{}.
@@ -80,13 +80,13 @@ websocket_terminate(Msg, _, {_,P})      -> kvs:info(?MODULE,"terminated ~p. noti
 current(Topic,Asks,Bids,Seq) ->
     [ [ case kvs:index(order,uid,O) of
              [Ord] -> book:del(setelement(1,#tick{id=O,sym=name(Topic)},name(Topic))),
-                      order(Topic,"book",side(Side),app:normal(S),app:normal(P),[],O,kvs:next_id(order,1));
-                [] -> order(Topic,"book",side(Side),app:normal(S),app:normal(P),[],O,kvs:next_id(order,1))
+                      order(Topic,"book",side(Side),tic:normal(S),tic:normal(P),[],O,kvs:next_id(order,1));
+                [] -> order(Topic,"book",side(Side),tic:normal(S),tic:normal(P),[],O,kvs:next_id(order,1))
         end
         || [P,S,O] <- Source ] || {Side,Source} <- [{ask,Asks},{bid,Bids}] ].
 
 temp(Asks,Bids,Seq) ->
-    [ [ order(tick,"book",side(Side),app:normal(S),app:normal(P),[],O,kvs:next_id(order,1))
+    [ [ order(tick,"book",side(Side),tic:normal(S),tic:normal(P),[],O,kvs:next_id(order,1))
         || [P,S,O] <- Source ] || {Side,Source} <- [{ask,Asks},{bid,Bids}] ].
 
 side(bid)    -> "buy";
@@ -107,4 +107,4 @@ cut(Topic, F, G) ->
     Deleted = lists:map(fun(#order{uid=O,sym=Sym}) -> book:del(#tick{sym=Sym,id=O}) end, Orders),
     G(Topic,Asks,Bids,Seq).
 
-shotlevel(Shot,Price) -> [ [app:normal(P),app:normal(S),I] || [P,S,I] <- Shot, app:normal(P) == Price ].
+shotlevel(Shot,Price) -> [ [tic:normal(P),tic:normal(S),I] || [P,S,I] <- Shot, tic:normal(P) == Price ].

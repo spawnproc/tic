@@ -13,7 +13,7 @@ timer_restart({X,Y,Z},Timer) ->
     erlang:send_after(1000*(1+Z+60*Y+60*60*X),self(),{timer,connect,Z}).
 
 handle_info({timer,connect,Z}, State=#state{endpoint=URL,venue=Venue,timer=Timer}) ->
-    kvs:info(?MODULE,"~p ~p~n",[Z,State]),
+    io:format("~p ~p~n",[Z,State]),
     T = try case websocket_client:start_link(URL, Venue, [self()]) of
                  {ok,Pid} -> kvs:info(?MODULE, "WebSocket started ~p for venue ~p~n", [Pid,Venue]), [];
                  {error,_} -> timer({0,0,Z},Timer) end
