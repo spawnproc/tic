@@ -14,7 +14,7 @@ defmodule TIC.Mixfile do
 
   def package do
     [
-      files: ~w(doc include mix.exs LICENSE),
+      files: ~w(src include mix.exs LICENSE),
       licenses: ["ISC"],
       maintainers: ["Namdak Tonpa"],
       name: :tic,

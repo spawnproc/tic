@@ -35,7 +35,7 @@ port(Port) -> [ { port, Port  } ].
 points()   -> cowboy_router:compile([{'_', [ {"/[...]", n2o_stream, []} ]}]).
 
 log_modules() -> [ bitmex, gdax, book, bsym, bshot, gshot, app, snapshot, venue, protocol ].
-init([])      -> { ok, { { one_for_one, 5, 1 }, [spec(application:get_env(n2o,port,9000))] ++
+init([])      -> { ok, { { one_for_one, 5, 1 }, [spec(application:get_env(n2o,port,9001))] ++
                                                 [ ws(A,B) || {A,B} <- venues() ] } }.
 start(_,_)    -> dirs(), %kvs:join(), 
                  supervisor:start_link({local,?MODULE},?MODULE,[]).
